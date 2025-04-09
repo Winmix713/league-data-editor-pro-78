@@ -1,244 +1,178 @@
-import React, { useState } from 'react';
-import { Header } from '@/components/Header';
-import SearchBar from '@/components/SearchBar';
-import { LeagueTable } from '@/components/LeagueTable';
-import { LeagueDetails } from '@/components/LeagueDetails';
-import { NewLeagueModal } from '@/components/NewLeagueModal';
-import type { Match } from '@/types';
-import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
-import { calculateStandings } from '@/utils/calculations';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
+import Header from "@/components/Header";
+import LeagueSeasons from "@/components/LeagueSeasons";
+import LeagueEditor from "@/components/LeagueEditor";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import IntegrationCards from "@/components/dashboard/IntegrationCards";
+import ContentTabs from "@/components/dashboard/ContentTabs";
+import MatchSchedule from "@/components/MatchSchedule";
+import { LeagueDetails } from "@/components/LeagueDetails";
+import type { LeagueData, Match } from "@/types";
 
-// Define a custom League type for this page
-interface League {
-  id: string;
-  name: string;
-  season: string;
-  teams: any[];
-  matches: Match[];
-  status: 'active' | 'completed';
-}
+const Matches = () => {
+  // 1. Kezdő nézet módosítása 'league-list'-re
+  const [activeTab, setActiveTab] = useState("league-list");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(null);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [dataUpdatedAt, setDataUpdatedAt] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Ez maradhat a kezdeti skeleton/placeholder effekthez
 
-// Mock data for initial leagues
-const mockLeagues: League[] = [
-  {
-    id: '1',
-    name: 'Premier League',
-    season: '2023-2024',
-    teams: [],
-    matches: [],
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'La Liga',
-    season: '2023-2024',
-    teams: [],
-    matches: [],
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'Bundesliga',
-    season: '2023-2024',
-    teams: [],
-    matches: [],
-    status: 'active'
-  },
-  {
-    id: '4',
-    name: 'Serie A',
-    season: '2022-2023',
-    teams: [],
-    matches: [],
-    status: 'completed'
-  }
-];
+  useEffect(() => {
+    // Szimulálja a kezdeti betöltést
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
-const Index = () => {
-  const [leagues, setLeagues] = useState<League[]>(mockLeagues);
-  const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentLeagueId, setCurrentLeagueId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
+  const handleRefreshData = () => {
+    setIsRefreshing(true);
+    // Valós API hívás helyett szimuláció
+    setTimeout(() => {
+      setIsRefreshing(false);
+      const now = new Date();
+      setDataUpdatedAt(now);
+      // Itt frissíteni kellene a tényleges adatokat is (selectedLeague, matches, stb.)
+      // Például: fetchDataForCurrentSelection();
+      toast.success("Data refreshed successfully", {
+        description: `All data has been updated as of ${now.toLocaleTimeString()}`
+      });
+    }, 2000);
+  };
 
-  const currentLeague = currentLeagueId 
-    ? leagues.find(league => league.id === currentLeagueId) 
-    : null;
+  const handleLeagueUpdate = (updatedLeague: LeagueData) => {
+    setSelectedLeague(updatedLeague);
+    // Opcionálisan frissíthetjük a meccseket is, ha a liga adatai változtak
+    // fetchMatchesForLeague(updatedLeague.id);
+    toast("League details updated.");
+  };
 
-  const filteredLeagues = leagues.filter(
-    league => league.name.toLowerCase().includes(search.toLowerCase()) ||
-              league.season.toLowerCase().includes(search.toLowerCase())
+  const handleMatchesUpdate = (updatedMatches: Match[]) => {
+    setMatches(updatedMatches);
+    toast("Matches updated.");
+  };
+
+  // 3. TODO: Szezonválasztó interaktívvá tétele
+  const seasonSelector = (
+    <div className="relative flex items-center">
+      <Button variant="outline" className="bg-black/20 border-white/10 text-white flex items-center gap-2">
+        <span>2023-2024 Szezon</span> {/* Statikus címke */}
+        <ChevronDown className="h-4 w-4" />
+      </Button>
+      {/* Itt lehetne egy lenyíló menü a szezonokkal */}
+    </div>
   );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSelectLeague = (league: LeagueData, leagueMatches: Match[]) => {
+    setSelectedLeague(league);
+    setMatches(leagueMatches);
+    setActiveTab("league-details"); // Liga kiválasztása után a részletek oldalra navigálunk
+    setIsLoading(false); // Biztosítjuk, hogy a loading véget érjen
   };
 
-  const handleSearchTerm = (term: string) => {
-    setSearch(term);
+  const handleBackToList = () => {
+    // Opcionálisan nullázhatjuk a kiválasztást, ha visszalépünk a listára
+    // setSelectedLeague(null);
+    // setMatches([]);
+    setActiveTab("league-list");
   };
 
-  const handleCreateLeague = () => {
-    setCurrentLeagueId(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditLeague = (id: string) => {
-    setCurrentLeagueId(id);
-    setIsModalOpen(true);
-  };
-
-  const handleViewLeague = (id: string) => {
-    setCurrentLeagueId(id);
-    setViewMode('details');
-  };
-
-  const handleDeleteLeague = (id: string) => {
-    setLeagues(prev => prev.filter(league => league.id !== id));
-  };
-
-  const handleBack = () => {
-    setViewMode('list');
-    setCurrentLeagueId(null);
-  };
-
-  const handleSubmitLeague = (data: { name: string, season: string, matches: Match[] }) => {
-    if (currentLeagueId) {
-      // Edit existing league
-      setLeagues(prev => prev.map(league => {
-        if (league.id === currentLeagueId) {
-          const teamNames = [...new Set(data.matches.flatMap(m => [m.home_team, m.away_team]))];
-          const teams = calculateStandings(data.matches);
-          
-          return {
-            ...league,
-            name: data.name,
-            season: data.season,
-            teams,
-            matches: data.matches
-          };
-        }
-        return league;
-      }));
-      toast.success("League updated successfully");
-    } else {
-      // Create new league
-      const teamNames = [...new Set(data.matches.flatMap(m => [m.home_team, m.away_team]))];
-      const teams = calculateStandings(data.matches);
-      
-      const newLeague: League = {
-        id: uuidv4(),
-        name: data.name,
-        season: data.season,
-        teams,
-        matches: data.matches,
-        status: 'active'
-      };
-      
-      setLeagues(prev => [newLeague, ...prev]);
-      toast.success("League created successfully");
-    }
-    
-    setIsModalOpen(false);
-  };
-
-  const handleUpdateMatch = (updatedMatch: Match) => {
-    if (!currentLeagueId) return;
-    
-    setLeagues(prev => prev.map(league => {
-      if (league.id === currentLeagueId) {
-        // Since our Match type doesn't have an id, we'll need another way to identify it
-        // For this example, we'll just use the updated matches as is
-        const updatedMatches = [...league.matches, updatedMatch];
-        
-        const teams = calculateStandings(updatedMatches);
-        
-        return {
-          ...league,
-          teams,
-          matches: updatedMatches
-        };
-      }
-      return league;
-    }));
-    
-    toast.success("Match result updated");
-  };
+  const handleBackFromEditor = () => {
+    setIsEditing(false);
+    // Ha a szerkesztőből lépünk vissza, érdemes lehet a liga listára menni,
+    // vagy arra a nézetre, ahonnan a szerkesztés indult.
+    setActiveTab("league-list");
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="container mx-auto max-w-7xl">
-        {viewMode === 'list' ? (
-          <>
-            <Header currentSeason="2023-2024" />
-            
-            <div className="bg-card rounded-xl overflow-hidden border border-white/5 shadow-lg">
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-                  <div className="w-full max-w-md">
-                    <SearchBar 
-                      value={search}
-                      onChange={handleSearchChange}
-                      placeholder="Search leagues..."
-                    />
-                  </div>
-                </div>
-                
-                <LeagueTable 
-                  leagues={filteredLeagues.map(league => ({
-                    id: league.id,
-                    name: league.name,
-                    season: league.season,
-                    winner: "-",
-                    secondPlace: "-", 
-                    thirdPlace: "-",
-                    status: league.status === 'completed' ? "Completed" : "In Progress"
-                  }))} 
-                  onLeagueAction={(id, action) => {
-                    if (action === 'view') handleViewLeague(id);
-                    else if (action === 'edit') handleEditLeague(id);
-                    else if (action === 'delete') handleDeleteLeague(id);
-                  }}
-                  onSearch={handleSearchTerm}
-                  onNewLeague={handleCreateLeague}
-                />
-              </div>
-            </div>
-          </>
+    <div className="min-h-screen pt-24 pb-16 bg-background">
+      <Header />
+      <div className="container mx-auto px-4">
+        {isEditing ? (
+          // Szerkesztő nézet
+          <LeagueEditor onBack={handleBackFromEditor} /* Opcionálisan átadhatjuk a ligát szerkesztésre */ />
         ) : (
-          <div className="bg-card rounded-xl overflow-hidden border border-white/5 shadow-lg p-6">
-            {currentLeague && (
-              <LeagueDetails 
-                league={{
-                  id: currentLeague.id,
-                  name: currentLeague.name,
-                  season: currentLeague.season,
-                  winner: "-",
-                  secondPlace: "-", 
-                  thirdPlace: "-",
-                  status: currentLeague.status === 'completed' ? "Completed" : "In Progress"
-                }}
-                matches={currentLeague.matches}
-                onBack={handleBack}
-                onUpdateLeague={() => {}} // Placeholder for now
-                onUpdateMatches={() => {}} // Placeholder for now
+          // Fő nézet
+          <div className="flex flex-col space-y-6">
+            <DashboardHeader
+              title="V-SPORTS ELEMZŐ RENDSZER"
+              subtitle="Professzionális Elemzés és Predikció"
+              dataUpdatedAt={dataUpdatedAt}
+              isRefreshing={isRefreshing}
+              onRefresh={handleRefreshData}
+              actionButton={seasonSelector} // Itt adjuk át a szezonválasztót
+            />
+
+            <IntegrationCards />
+
+            {/* Liga Lista nézet */}
+            {activeTab === "league-list" && (
+              <LeagueSeasons
+                onEdit={() => setIsEditing(true)}
+                onSelect={handleSelectLeague}
               />
             )}
+
+            {/* Liga Részletek nézet */}
+            {activeTab === "league-details" && selectedLeague && (
+              <LeagueDetails
+                league={selectedLeague}
+                matches={matches} // Átadjuk a state-ben lévő meccseket
+                onBack={handleBackToList} // Visszalépés a listához
+                onUpdateLeague={handleLeagueUpdate}
+                onUpdateMatches={handleMatchesUpdate}
+                // Lehetőség a fülek közötti navigációra a részletek oldalról
+                onNavigateToTab={(tabName: string) => setActiveTab(tabName)}
+              />
+            )}
+
+            {/* Fülek (Meccsek, Tabella, Forma) - Akkor jelennek meg, ha nem a lista vagy a részletek aktív */}
+            {/* 4. Megfontolás: Lehet, hogy csak akkor kellene megjelennie, ha van selectedLeague? */}
+            {/* Jelenlegi logika: Ha a tab ezek egyike, akkor mutatjuk */}
+            {["matches", "standings", "form"].includes(activeTab) && selectedLeague && ( // Csak akkor mutatjuk, ha van kiválasztott liga
+              <>
+                {/* Vissza gomb a liga részleteihez vagy listához */}
+                 <Button onClick={() => setActiveTab('league-details')} variant="outline" className="self-start">
+                    ← Back to League Details
+                 </Button>
+                 {/* VAGY: <Button onClick={handleBackToList} variant="outline">← Back to League List</Button> */}
+
+                <ContentTabs
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isLoading={isLoading} // Ezt finomítani kellene valós betöltéshez
+                />
+                {/* 2. Adatátadás a MatchSchedule-nek */}
+                {activeTab === "matches" && (
+                  <MatchSchedule
+                    matches={matches} // Átadjuk a kiválasztott liga meccseit
+                    league={selectedLeague} // Opcionálisan a liga adatait is átadhatjuk
+                    isLoading={isLoading /* vagy egy specifikusabb loading state */}
+                  />
+                )}
+                 {/* TODO: Komponensek a "standings" és "form" fülekhez, átadva nekik a selectedLeague és matches adatokat */}
+                 {/* {activeTab === "standings" && <LeagueStandings league={selectedLeague} />} */}
+                 {/* {activeTab === "form" && <TeamForm league={selectedLeague} matches={matches} />} */}
+              </>
+            )}
+
+             {/* Ha nincs kiválasztott liga, de a tab matches/standings/form, akkor üzenet */}
+             {["matches", "standings", "form"].includes(activeTab) && !selectedLeague && (
+                <div className="text-center py-8 text-muted-foreground">
+                    Please select a league from the 'League List' tab first.
+                     <Button onClick={() => setActiveTab('league-list')} variant="link">Go to League List</Button>
+                </div>
+             )}
+
+
           </div>
         )}
-
-        <NewLeagueModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onCreateLeague={async (id) => {
-            // Just a stub implementation to satisfy TypeScript
-            return Promise.resolve();
-          }}
-        />
       </div>
     </div>
   );
 };
 
-export default Index;
+export default Matches;
