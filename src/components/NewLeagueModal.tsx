@@ -1,68 +1,108 @@
+"use client"
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import FormTable from './FormTable';
-import { LeagueFormData } from '@/types';
+import { useCallback, useState } from "react"
+import { Plus } from "lucide-react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+const formSchema = z.object({
+  leagueId: z
+    .string()
+    .min(3, "League ID must be at least 3 characters")
+    .max(50, "League ID must be less than 50 characters")
+    .regex(/^[a-zA-Z0-9-_]+$/, "League ID can only contain letters, numbers, hyphens, and underscores")
+    .trim(),
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 interface NewLeagueModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: { name: string, season: string, matches: any[] }) => void;
-  initialData?: LeagueFormData;
+  isOpen: boolean
+  onClose: () => void
+  onCreateLeague: (leagueId: string) => Promise<void>
 }
 
-const NewLeagueModal = ({ isOpen, onClose, onSubmit, initialData }: NewLeagueModalProps) => {
+export function NewLeagueModal({ isOpen, onClose, onCreateLeague }: NewLeagueModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      leagueId: "",
+    },
+  })
+
+  const handleSubmit = useCallback(
+    async (values: FormValues) => {
+      try {
+        setIsSubmitting(true)
+        await onCreateLeague(values.leagueId)
+        form.reset()
+        onClose()
+      } catch (error) {
+        form.setError("leagueId", {
+          type: "manual",
+          message: error instanceof Error ? error.message : "Failed to create league",
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [onCreateLeague, onClose, form],
+  )
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-[#0a0f14] border-white/10 relative overflow-hidden">
-        {/* Background blur effects */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        
-        <DialogHeader className="relative z-10">
-          <DialogTitle className="text-xl font-bold text-white">
-            {initialData ? 'Edit League' : 'Create New League'}
-          </DialogTitle>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md bg-[#0a0f14] border border-white/5 text-white">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold tracking-tight">Create New League</DialogTitle>
           <DialogDescription className="text-gray-400">
-            {initialData 
-              ? 'Update your league information and team setup.'
-              : 'Create a new league, add teams, and generate the match schedule.'}
+            Enter the ID for the new league. The name will be automatically generated.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="relative z-10">
-          <FormTable 
-            onSubmit={onSubmit}
-            initialData={initialData}
-          />
-        </div>
-        
-        <DialogFooter className="gap-2 sm:justify-start relative z-10">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onClose}
-            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-          >
-            Cancel
-          </Button>
-        </DialogFooter>
-        
-        {/* Top border gradient */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-        {/* Bottom border gradient */}
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="leagueId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-300">League ID</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter league ID..."
+                      disabled={isSubmitting}
+                      className="font-mono bg-black/30 border-white/10 text-white focus:ring-blue-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-400" />
+                </FormItem>
+              )}
+            />
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="gap-2 bg-blue-500 hover:bg-blue-600 text-white">
+                <Plus className="h-4 w-4" />
+                Create League
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
-  );
-};
-
-export default NewLeagueModal;
+  )
+}
