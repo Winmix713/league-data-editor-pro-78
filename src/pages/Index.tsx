@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
-import { SearchBar } from '@/components/SearchBar';
+import SearchBar from '@/components/SearchBar';
 import { LeagueTable } from '@/components/LeagueTable';
 import { LeagueDetails } from '@/components/LeagueDetails';
 import { NewLeagueModal } from '@/components/NewLeagueModal';
-import { LeagueData, Match } from '@/types';
+import type { Match } from '@/types';
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 import { calculateStandings } from '@/utils/calculations';
@@ -74,6 +73,10 @@ const Index = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+  };
+
+  const handleSearchTerm = (term: string) => {
+    setSearch(term);
   };
 
   const handleCreateLeague = () => {
@@ -197,7 +200,7 @@ const Index = () => {
                     else if (action === 'edit') handleEditLeague(id);
                     else if (action === 'delete') handleDeleteLeague(id);
                   }}
-                  onSearch={handleSearchChange}
+                  onSearch={handleSearchTerm}
                   onNewLeague={handleCreateLeague}
                 />
               </div>
