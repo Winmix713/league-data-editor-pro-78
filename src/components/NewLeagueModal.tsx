@@ -22,8 +22,12 @@ interface NewLeagueModalProps {
 const NewLeagueModal = ({ isOpen, onClose, onSubmit, initialData }: NewLeagueModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-white/10">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] bg-[#0a0f14] border-white/10 relative overflow-hidden">
+        {/* Background blur effects */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+        
+        <DialogHeader className="relative z-10">
           <DialogTitle className="text-xl font-bold text-white">
             {initialData ? 'Edit League' : 'Create New League'}
           </DialogTitle>
@@ -34,12 +38,14 @@ const NewLeagueModal = ({ isOpen, onClose, onSubmit, initialData }: NewLeagueMod
           </DialogDescription>
         </DialogHeader>
 
-        <FormTable 
-          onSubmit={onSubmit}
-          initialData={initialData}
-        />
+        <div className="relative z-10">
+          <FormTable 
+            onSubmit={onSubmit}
+            initialData={initialData}
+          />
+        </div>
         
-        <DialogFooter className="gap-2 sm:justify-start">
+        <DialogFooter className="gap-2 sm:justify-start relative z-10">
           <Button 
             type="button" 
             variant="outline" 
@@ -49,6 +55,11 @@ const NewLeagueModal = ({ isOpen, onClose, onSubmit, initialData }: NewLeagueMod
             Cancel
           </Button>
         </DialogFooter>
+        
+        {/* Top border gradient */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        {/* Bottom border gradient */}
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
       </DialogContent>
     </Dialog>
   );
