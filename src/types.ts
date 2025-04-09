@@ -1,43 +1,30 @@
-
-export interface Team {
-  id: string;
-  name: string;
-  points: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  goalDiff: number;
-  played: number;
+export interface LeagueData {
+  id: string
+  name: string
+  season: string
+  winner: string
+  secondPlace: string
+  thirdPlace: string
+  status: "In Progress" | "Completed"
 }
 
 export interface Match {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeGoals: number;
-  awayGoals: number;
-  played: boolean;
-  matchday: number;
+  date: string
+  home_team: string
+  away_team: string
+  ht_home_score: number
+  ht_away_score: number
+  home_score: number
+  away_score: number
+  round?: string
 }
 
-export interface League {
-  id: string;
-  name: string;
-  season: string;
-  teams: Team[];
-  matches: Match[];
-  status: "active" | "completed" | "upcoming";
-}
-
-export interface LeagueBasicInfo {
-  name: string;
-  season: string;
-}
-
-export interface LeagueFormData {
-  name: string;
-  season: string;
-  teams: string[];
+export interface TeamForm {
+  position: number
+  team: string
+  played: number
+  goalsFor: number
+  goalsAgainst: number
+  points: number
+  form: string
 }
