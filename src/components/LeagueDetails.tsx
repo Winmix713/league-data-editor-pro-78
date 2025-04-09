@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -60,7 +59,6 @@ export const LeagueDetails = memo(
             try {
               const parsedMatches = result.data
                 .filter((rawMatch: any) => {
-                  // Make sure all required fields exist
                   return (
                     rawMatch.date !== undefined &&
                     (rawMatch.Home_team || rawMatch.home_team) !== undefined &&
@@ -71,20 +69,16 @@ export const LeagueDetails = memo(
                     (rawMatch["Full/Away"] || rawMatch.away_score) !== undefined
                   )
                 })
-                .map((rawMatch: any) => {
-                  // Map the CSV columns to our Match type
-                  const match: Match = {
-                    date: rawMatch.date,
-                    home_team: rawMatch.Home_team || rawMatch.home_team,
-                    away_team: rawMatch.Away_team || rawMatch.away_team,
-                    ht_home_score: Number(rawMatch["Half/Home"] || rawMatch.ht_home_score),
-                    ht_away_score: Number(rawMatch["Half/Away"] || rawMatch.ht_away_score),
-                    home_score: Number(rawMatch["Full/Home"] || rawMatch.home_score),
-                    away_score: Number(rawMatch["Full/Away"] || rawMatch.away_score),
-                    round: rawMatch.round || "1",
-                  }
-                  return match
-                })
+                .map((rawMatch: any) => ({
+                  date: rawMatch.date,
+                  home_team: rawMatch.Home_team || rawMatch.home_team,
+                  away_team: rawMatch.Away_team || rawMatch.away_team,
+                  ht_home_score: Number(rawMatch["Half/Home"] || rawMatch.ht_home_score),
+                  ht_away_score: Number(rawMatch["Half/Away"] || rawMatch.ht_away_score),
+                  home_score: Number(rawMatch["Full/Home"] || rawMatch.home_score),
+                  away_score: Number(rawMatch["Full/Away"] || rawMatch.away_score),
+                  round: rawMatch.round || "1",
+                }))
 
               if (parsedMatches.length === 0) {
                 toast({
@@ -224,22 +218,13 @@ export const LeagueDetails = memo(
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 bg-black/20 w-full rounded-xl">
-            <TabsTrigger
-              value="matches"
-              className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-            >
+            <TabsTrigger value="matches" className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20">
               Matches
             </TabsTrigger>
-            <TabsTrigger
-              value="standings"
-              className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-            >
+            <TabsTrigger value="standings" className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20">
               Standings
             </TabsTrigger>
-            <TabsTrigger
-              value="form"
-              className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-            >
+            <TabsTrigger value="form" className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20">
               Form
             </TabsTrigger>
           </TabsList>
