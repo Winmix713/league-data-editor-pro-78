@@ -1,165 +1,123 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { CustomInput } from "@/components/ui/custom-input";
-import { LeagueFormData } from '@/types';
-import { toast } from "sonner";
-import { X, Plus, Save } from 'lucide-react';
-import { generateMatchSchedule } from '@/utils/calculations';
+import { memo } from "react"
+import { ArrowDown, ArrowUp, Minus } from "lucide-react"
+import type { TeamForm } from "../types"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface FormTableProps {
-  onSubmit: (data: { name: string, season: string, matches: any[] }) => void;
-  initialData?: LeagueFormData;
+  teamForms: TeamForm[]
+  className?: string
 }
 
-const FormTable = ({ onSubmit, initialData }: FormTableProps) => {
-  const [formData, setFormData] = useState<LeagueFormData>(
-    initialData || {
-      name: '',
-      season: '',
-      teams: ['', '']
-    }
-  );
+const FORM_COLORS = {
+  W: "bg-emerald-500 hover:bg-emerald-600",
+  D: "bg-amber-500 hover:bg-amber-600",
+  L: "bg-red-500 hover:bg-red-600",
+} as const
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+const FormResult = memo(({ result }: { result: string }) => (
+  <span
+    className={`w-6 h-6 flex items-center justify-center text-xs font-semibold text-white rounded transition-colors ${
+      FORM_COLORS[result as keyof typeof FORM_COLORS] ?? "bg-gray-500 hover:bg-gray-600"
+    }`}
+    title={result === "W" ? "Win" : result === "D" ? "Draw" : result === "L" ? "Loss" : "Unknown"}
+  >
+    {result}
+  </span>
+))
 
-  const handleTeamChange = (index: number, value: string) => {
-    const newTeams = [...formData.teams];
-    newTeams[index] = value;
-    setFormData(prev => ({ ...prev, teams: newTeams }));
-  };
+FormResult.displayName = "FormResult"
 
-  const addTeam = () => {
-    setFormData(prev => ({ ...prev, teams: [...prev.teams, ''] }));
-  };
+const PositionIndicator = memo(({ position, prevPosition }: { position: number; prevPosition?: number }) => {
+  if (!prevPosition) return <span>{position}</span>
 
-  const removeTeam = (index: number) => {
-    if (formData.teams.length > 2) {
-      const newTeams = [...formData.teams];
-      newTeams.splice(index, 1);
-      setFormData(prev => ({ ...prev, teams: newTeams }));
-    } else {
-      toast.error("League must have at least 2 teams");
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.name.trim()) {
-      toast.error("League name is required");
-      return;
-    }
-    
-    if (!formData.season.trim()) {
-      toast.error("Season is required");
-      return;
-    }
-    
-    // Check if all teams have names
-    const emptyTeamIndex = formData.teams.findIndex(team => !team.trim());
-    if (emptyTeamIndex !== -1) {
-      toast.error(`Team #${emptyTeamIndex + 1} name is required`);
-      return;
-    }
-    
-    // Check for duplicate team names
-    const teamNames = formData.teams.map(name => name.trim().toLowerCase());
-    const uniqueTeams = new Set(teamNames);
-    if (uniqueTeams.size !== formData.teams.length) {
-      toast.error("All team names must be unique");
-      return;
-    }
-    
-    // Generate match schedule
-    const matches = generateMatchSchedule(formData.teams);
-    
-    onSubmit({ 
-      name: formData.name, 
-      season: formData.season,
-      matches: matches
-    });
-  };
+  const diff = prevPosition - position
+  if (diff === 0)
+    return (
+      <span className="flex items-center gap-1">
+        {position} <Minus className="w-3 h-3 text-gray-400" />
+      </span>
+    )
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-gray-300 text-sm">League Name</label>
-          <CustomInput 
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            placeholder="Premier League"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-gray-300 text-sm">Season</label>
-          <CustomInput 
-            name="season"
-            value={formData.season}
-            onChange={handleInputChange}
-            placeholder="2023-2024"
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Teams</h3>
-          <Button 
-            type="button"
-            variant="outline" 
-            size="sm"
-            className="bg-black/20 border-white/10 text-white hover:bg-black/30"
-            onClick={addTeam}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Team
-          </Button>
-        </div>
-        
-        <div className="space-y-2">
-          {formData.teams.map((team, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <div className="flex-1">
-                <CustomInput
-                  value={team}
-                  onChange={(e) => handleTeamChange(index, e.target.value)}
-                  placeholder={`Team ${index + 1}`}
-                />
-              </div>
-              
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-gray-400 hover:text-white hover:bg-white/5"
-                onClick={() => removeTeam(index)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button 
-          type="submit"
-          className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          Save League
-        </Button>
-      </div>
-    </form>
-  );
-};
+    <span className="flex items-center gap-1">
+      {position}
+      {diff > 0 ? <ArrowUp className="w-3 h-3 text-emerald-500" /> : <ArrowDown className="w-3 h-3 text-red-500" />}
+    </span>
+  )
+})
 
-export default FormTable;
+PositionIndicator.displayName = "PositionIndicator"
+
+export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProps) => {
+  if (teamForms.length === 0) {
+    return (
+      <div className="text-gray-400 text-center p-4 bg-black/20 rounded-lg border border-white/5">
+        No form data available.
+      </div>
+    )
+  }
+
+  return (
+    <div className={className}>
+      <h3 className="text-xl font-bold text-white mb-6 flex items-center">
+        Team Form
+        <span className="text-sm font-normal text-gray-400 ml-2">Last updated: {new Date().toLocaleDateString()}</span>
+      </h3>
+      <div className="overflow-x-auto rounded-lg bg-black/20 border border-white/5">
+        <Table>
+          <TableHeader className="bg-black/40">
+            <TableRow className="border-b border-white/5 hover:bg-transparent">
+              <TableHead className="text-gray-400 font-normal">Pos</TableHead>
+              <TableHead className="text-gray-400 font-normal">Team</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">P</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">GF</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">GA</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">GD</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">Pts</TableHead>
+              <TableHead className="text-gray-400 font-normal text-center">Form</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {teamForms.map((team, index) => (
+              <TableRow key={`${team.team}-${index}`} className="border-b border-white/5 hover:bg-white/5">
+                <TableCell>
+                  <PositionIndicator
+                    position={team.position}
+                    prevPosition={index > 0 ? teamForms[index - 1].position : undefined}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">{team.team}</TableCell>
+                <TableCell className="text-center">{team.played}</TableCell>
+                <TableCell className="text-center">{team.goalsFor}</TableCell>
+                <TableCell className="text-center">{team.goalsAgainst}</TableCell>
+                <TableCell className="text-center">
+                  <span
+                    className={
+                      team.goalsFor - team.goalsAgainst > 0
+                        ? "text-emerald-400"
+                        : team.goalsFor - team.goalsAgainst < 0
+                          ? "text-red-400"
+                          : ""
+                    }
+                  >
+                    {team.goalsFor - team.goalsAgainst}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">{team.points}</TableCell>
+                <TableCell>
+                  <div className="flex justify-center gap-1.5">
+                    {team.form.split("").map((result, i) => (
+                      <FormResult key={i} result={result} />
+                    ))}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+})
+
+FormTable.displayName = "FormTable"
