@@ -1,19 +1,18 @@
-
-import { memo } from "react"
-import { ArrowDown, ArrowUp, Minus } from "lucide-react"
-import type { TeamForm } from "../types"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { memo } from "react";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import type { TeamForm } from "../types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface FormTableProps {
-  teamForms: TeamForm[]
-  className?: string
+  teamForms: TeamForm[];
+  className?: string;
 }
 
 const FORM_COLORS = {
   W: "bg-emerald-500 hover:bg-emerald-600",
   D: "bg-amber-500 hover:bg-amber-600",
   L: "bg-red-500 hover:bg-red-600",
-} as const
+} as const;
 
 const FormResult = memo(({ result }: { result: string }) => (
   <span
@@ -24,30 +23,30 @@ const FormResult = memo(({ result }: { result: string }) => (
   >
     {result}
   </span>
-))
+));
 
-FormResult.displayName = "FormResult"
+FormResult.displayName = "FormResult";
 
 const PositionIndicator = memo(({ position, prevPosition }: { position: number; prevPosition?: number }) => {
-  if (!prevPosition) return <span>{position}</span>
+  if (!prevPosition) return <span>{position}</span>;
 
-  const diff = prevPosition - position
+  const diff = prevPosition - position;
   if (diff === 0)
     return (
       <span className="flex items-center gap-1">
         {position} <Minus className="w-3 h-3 text-gray-400" />
       </span>
-    )
+    );
 
   return (
     <span className="flex items-center gap-1">
       {position}
       {diff > 0 ? <ArrowUp className="w-3 h-3 text-emerald-500" /> : <ArrowDown className="w-3 h-3 text-red-500" />}
     </span>
-  )
-})
+  );
+});
 
-PositionIndicator.displayName = "PositionIndicator"
+PositionIndicator.displayName = "PositionIndicator";
 
 export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProps) => {
   if (teamForms.length === 0) {
@@ -55,7 +54,7 @@ export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProp
       <div className="text-gray-400 text-center p-4 bg-black/20 rounded-lg border border-white/5">
         No form data available.
       </div>
-    )
+    );
   }
 
   return (
@@ -97,8 +96,8 @@ export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProp
                       team.goalsFor - team.goalsAgainst > 0
                         ? "text-emerald-400"
                         : team.goalsFor - team.goalsAgainst < 0
-                          ? "text-red-400"
-                          : ""
+                        ? "text-red-400"
+                        : ""
                     }
                   >
                     {team.goalsFor - team.goalsAgainst}
@@ -118,7 +117,7 @@ export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProp
         </Table>
       </div>
     </div>
-  )
-})
+  );
+});
 
-FormTable.displayName = "FormTable"
+FormTable.displayName = "FormTable";
