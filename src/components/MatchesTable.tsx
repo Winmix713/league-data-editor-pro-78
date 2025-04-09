@@ -1,156 +1,167 @@
+"use client"
 
-import React from 'react';
-import { Match } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Edit, Check, X } from 'lucide-react';
-import { CustomInput } from '@/components/ui/custom-input';
+import { memo, useMemo, useState } from "react"
+import { Calendar, AlertCircle } from "lucide-react"
+import type { Match } from "../types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface MatchesTableProps {
-  matches: Match[];
-  onUpdateMatch?: (match: Match) => void;
-  editable?: boolean;
+  matches: Match[]
 }
 
-const MatchesTable = ({ matches, onUpdateMatch, editable = false }: MatchesTableProps) => {
-  const [editingMatch, setEditingMatch] = React.useState<string | null>(null);
-  const [matchData, setMatchData] = React.useState<Match | null>(null);
+const MatchScore = memo(
+  ({
+    homeScore,
+    awayScore,
+    isHalfTime,
+  }: {
+    homeScore: number
+    awayScore: number
+    isHalfTime?: boolean
+  }) => {
+    const scoreClass = useMemo(() => {
+      if (isHalfTime) return "text-gray-400"
+      if (homeScore > awayScore) return "text-emerald-400"
+      if (homeScore < awayScore) return "text-red-400"
+      return "text-amber-400"
+    }, [homeScore, awayScore, isHalfTime])
 
-  const handleEditClick = (match: Match) => {
-    setEditingMatch(match.id);
-    setMatchData({ ...match });
-  };
+    return (
+      <span className={`font-mono font-bold ${scoreClass}`}>
+        {homeScore} - {awayScore}
+      </span>
+    )
+  },
+)
 
-  const handleSaveClick = () => {
-    if (matchData && onUpdateMatch) {
-      onUpdateMatch(matchData);
-      setEditingMatch(null);
-      setMatchData(null);
-    }
-  };
+MatchScore.displayName = "MatchScore"
 
-  const handleCancelClick = () => {
-    setEditingMatch(null);
-    setMatchData(null);
-  };
+export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
+  const [viewType, setViewType] = useState<"rounds" | "all">("rounds")
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!matchData) return;
-    
-    const { name, value } = e.target;
-    const numValue = parseInt(value, 10);
-    
-    if (isNaN(numValue)) {
-      setMatchData({
-        ...matchData,
-        [name]: 0
-      });
-    } else {
-      setMatchData({
-        ...matchData,
-        [name]: Math.max(0, numValue)
-      });
-    }
-  };
+  const matchesByRound = useMemo(() => {
+    return matches.reduce(
+      (acc, match) => {
+        const round = match.round || "Unknown"
+        if (!acc[round]) {
+          acc[round] = []
+        }
+        acc[round].push(match)
+        return acc
+      },
+      {} as Record<string, Match[]>,
+    )
+  }, [matches])
 
-  // Group matches by matchday
-  const matchesByDay: { [key: number]: Match[] } = {};
-  matches.forEach(match => {
-    if (!matchesByDay[match.matchday]) {
-      matchesByDay[match.matchday] = [];
-    }
-    matchesByDay[match.matchday].push(match);
-  });
-
-  // Sort matchdays
-  const sortedMatchdays = Object.keys(matchesByDay)
-    .map(Number)
-    .sort((a, b) => a - b);
+  if (matches.length === 0) {
+    return (
+      <div className="bg-black/20 rounded-xl p-8 text-center border border-white/5">
+        <div className="flex flex-col items-center gap-3">
+          <AlertCircle className="w-8 h-8 text-gray-500" />
+          <p className="text-gray-400">No matches available for this league yet.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-8">
-      {sortedMatchdays.map(matchday => (
-        <div key={matchday} className="bg-black/20 rounded-lg p-4">
-          <h3 className="text-white font-medium mb-3">Matchday {matchday}</h3>
-          <table className="w-full">
-            <tbody>
-              {matchesByDay[matchday].map((match) => (
-                <tr key={match.id} className="border-b border-white/5 last:border-0">
-                  {editingMatch === match.id ? (
-                    <td className="py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 text-right">{match.homeTeam}</div>
-                        <div className="flex items-center gap-1 w-20">
-                          <CustomInput
-                            name="homeGoals"
-                            value={matchData?.homeGoals.toString() || "0"}
-                            onChange={handleInputChange}
-                            className="w-12 text-center p-1"
-                          />
-                          <span>:</span>
-                          <CustomInput
-                            name="awayGoals"
-                            value={matchData?.awayGoals.toString() || "0"}
-                            onChange={handleInputChange}
-                            className="w-12 text-center p-1"
-                          />
-                        </div>
-                        <div className="flex-1">{match.awayTeam}</div>
-                        <div className="flex gap-1 ml-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
-                            onClick={handleSaveClick}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                            onClick={handleCancelClick}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </td>
-                  ) : (
-                    <td className="py-3">
-                      <div className="flex items-center">
-                        <div className="flex-1 text-right pr-2">{match.homeTeam}</div>
-                        <div className={`px-2 py-1 rounded ${match.played ? 'bg-white/10' : 'bg-white/5 text-gray-500'}`}>
-                          {match.played ? `${match.homeGoals} : ${match.awayGoals}` : "vs"}
-                        </div>
-                        <div className="flex-1 pl-2">{match.awayTeam}</div>
-                        
-                        {editable && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 ml-2 text-gray-400 hover:text-white hover:bg-white/5"
-                            onClick={() => handleEditClick(match)}
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-blue-500" />
+          <h3 className="text-xl font-bold text-white">Match Schedule</h3>
+        </div>
+        <Select value={viewType} onValueChange={(value) => setViewType(value as "rounds" | "all")}>
+          <SelectTrigger className="w-[180px] bg-black/30 border-white/10 text-white">
+            <SelectValue placeholder="View type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="rounds">View by Rounds</SelectItem>
+            <SelectItem value="all">View All Matches</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+        {viewType === "rounds" ? (
+          <div className="divide-y divide-white/10">
+            {Object.entries(matchesByRound).map(([round, roundMatches]) => (
+              <div key={round} className="p-4">
+                <div className="flex items-center gap-2 mb-3 bg-black/30 rounded-lg p-3">
+                  <span className="w-6 h-6 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
+                    {round}
+                  </span>
+                  <h4 className="text-base font-medium text-white">Round {round}</h4>
+                </div>
+                <Table>
+                  <TableHeader className="bg-black/40">
+                    <TableRow className="border-b border-white/5 hover:bg-transparent">
+                      <TableHead className="text-gray-400 font-normal">Date</TableHead>
+                      <TableHead className="text-gray-400 font-normal">Home Team</TableHead>
+                      <TableHead className="text-gray-400 font-normal">Away Team</TableHead>
+                      <TableHead className="text-gray-400 font-normal text-center">HT</TableHead>
+                      <TableHead className="text-gray-400 font-normal text-center">FT</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {roundMatches.map((match, index) => (
+                      <TableRow
+                        key={`${match.home_team}-${match.away_team}-${index}`}
+                        className="border-b border-white/5 hover:bg-white/5"
+                      >
+                        <TableCell>{match.date}</TableCell>
+                        <TableCell className="font-medium">{match.home_team}</TableCell>
+                        <TableCell className="font-medium">{match.away_team}</TableCell>
+                        <TableCell className="text-center">
+                          <MatchScore homeScore={match.ht_home_score} awayScore={match.ht_away_score} isHalfTime />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <MatchScore homeScore={match.home_score} awayScore={match.away_score} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Table>
+            <TableHeader className="bg-black/40">
+              <TableRow className="border-b border-white/5 hover:bg-transparent">
+                <TableHead className="text-gray-400 font-normal">Round</TableHead>
+                <TableHead className="text-gray-400 font-normal">Date</TableHead>
+                <TableHead className="text-gray-400 font-normal">Home Team</TableHead>
+                <TableHead className="text-gray-400 font-normal">Away Team</TableHead>
+                <TableHead className="text-gray-400 font-normal text-center">HT</TableHead>
+                <TableHead className="text-gray-400 font-normal text-center">FT</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {matches.map((match, index) => (
+                <TableRow
+                  key={`${match.home_team}-${match.away_team}-${index}`}
+                  className="border-b border-white/5 hover:bg-white/5"
+                >
+                  <TableCell>{match.round}</TableCell>
+                  <TableCell>{match.date}</TableCell>
+                  <TableCell className="font-medium">{match.home_team}</TableCell>
+                  <TableCell className="font-medium">{match.away_team}</TableCell>
+                  <TableCell className="text-center">
+                    <MatchScore homeScore={match.ht_home_score} awayScore={match.ht_away_score} isHalfTime />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <MatchScore homeScore={match.home_score} awayScore={match.away_score} />
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-
-      {matches.length === 0 && (
-        <div className="text-center text-gray-400 py-6">
-          No matches scheduled
-        </div>
-      )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
     </div>
-  );
-};
+  )
+})
 
-export default MatchesTable;
+MatchesTable.displayName = "MatchesTable"
