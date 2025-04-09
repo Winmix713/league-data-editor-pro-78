@@ -1,3 +1,4 @@
+
 import { memo } from "react"
 import { ArrowDown, ArrowUp, Minus } from "lucide-react"
 import type { TeamForm } from "../types"
@@ -106,7 +107,7 @@ export const FormTable = memo(({ teamForms = [], className = "" }: FormTableProp
                 <TableCell className="text-center">{team.points}</TableCell>
                 <TableCell>
                   <div className="flex justify-center gap-1.5">
-                    {team.form.split("").map((result, i) => (
+                    {team.form.map((result, i) => (
                       <FormResult key={i} result={result} />
                     ))}
                   </div>

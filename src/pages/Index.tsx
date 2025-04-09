@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
-import SearchBar from '@/components/SearchBar';
+import { SearchBar } from '@/components/SearchBar';
 import { LeagueTable } from '@/components/LeagueTable';
 import { LeagueDetails } from '@/components/LeagueDetails';
 import { NewLeagueModal } from '@/components/NewLeagueModal';
@@ -168,12 +168,7 @@ const Index = () => {
       <div className="container mx-auto max-w-7xl">
         {viewMode === 'list' ? (
           <>
-            <Header 
-              title="Leagues & Matches" 
-              description="Create and manage leagues, upload match data, and view statistics" 
-              onCreateNew={handleCreateLeague}
-              createButtonText="New League"
-            />
+            <Header currentSeason="2023-2024" />
             
             <div className="bg-card rounded-xl overflow-hidden border border-white/5 shadow-lg">
               <div className="p-6">
@@ -202,6 +197,8 @@ const Index = () => {
                     else if (action === 'edit') handleEditLeague(id);
                     else if (action === 'delete') handleDeleteLeague(id);
                   }}
+                  onSearch={handleSearchChange}
+                  onNewLeague={handleCreateLeague}
                 />
               </div>
             </div>
