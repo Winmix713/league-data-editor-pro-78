@@ -1,141 +1,174 @@
-import { Team, Match } from "../types";
+import { z } from "zod"
 
-export const calculateStandings = (teams: string[], matches: Match[]): Team[] => {
-  // Initialize team stats
-  let teamStats: Team[] = teams.map(teamName => ({
-    id: teamName.toLowerCase().replace(/\s+/g, '-'),
-    name: teamName,
-    points: 0,
-    wins: 0,
-    draws: 0,
-    losses: 0,
-    goalsFor: 0,
-    goalsAgainst: 0,
-    goalDiff: 0,
-    played: 0
-  }));
+export const matchSchema = z.object({
+  home_team: z.string(),
+  away_team: z.string(),
+  home_score: z.number().int().min(0),
+  away_score: z.number().int().min(0),
+})
 
-  // Calculate stats based on matches
-  matches.forEach(match => {
-    if (match.played) {
-      // Find the teams
-      const homeTeamIndex = teamStats.findIndex(team => team.name === match.homeTeam);
-      const awayTeamIndex = teamStats.findIndex(team => team.name === match.awayTeam);
-      
-      if (homeTeamIndex !== -1 && awayTeamIndex !== -1) {
-        // Update games played
-        teamStats[homeTeamIndex].played += 1;
-        teamStats[awayTeamIndex].played += 1;
-        
-        // Update goals
-        teamStats[homeTeamIndex].goalsFor += match.homeGoals;
-        teamStats[homeTeamIndex].goalsAgainst += match.awayGoals;
-        teamStats[awayTeamIndex].goalsFor += match.awayGoals;
-        teamStats[awayTeamIndex].goalsAgainst += match.homeGoals;
-        
-        // Update goal difference
-        teamStats[homeTeamIndex].goalDiff = teamStats[homeTeamIndex].goalsFor - teamStats[homeTeamIndex].goalsAgainst;
-        teamStats[awayTeamIndex].goalDiff = teamStats[awayTeamIndex].goalsFor - teamStats[awayTeamIndex].goalsAgainst;
-        
-        // Update wins, draws, losses, and points
-        if (match.homeGoals > match.awayGoals) {
-          // Home team wins
-          teamStats[homeTeamIndex].wins += 1;
-          teamStats[homeTeamIndex].points += 3;
-          teamStats[awayTeamIndex].losses += 1;
-        } else if (match.homeGoals < match.awayGoals) {
-          // Away team wins
-          teamStats[awayTeamIndex].wins += 1;
-          teamStats[awayTeamIndex].points += 3;
-          teamStats[homeTeamIndex].losses += 1;
+export type Match = z.infer<typeof matchSchema>
+
+export interface StandingsEntry {
+  position: number
+  team: string
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  goalsFor: number
+  goalsAgainst: number
+  goalDifference: number
+  points: number
+  form: Array<"W" | "D" | "L">
+  previousPosition?: number
+}
+
+export interface TeamForm {
+  position: number
+  team: string
+  played: number
+  goalsFor: number
+  goalsAgainst: number
+  points: number
+  form: Array<"W" | "D" | "L">
+}
+
+interface TeamStats extends Omit<StandingsEntry, "position" | "previousPosition"> {}
+
+const createInitialTeamStats = (team: string): TeamStats => ({
+  team,
+  played: 0,
+  won: 0,
+  drawn: 0,
+  lost: 0,
+  goalsFor: 0,
+  goalsAgainst: 0,
+  goalDifference: 0,
+  points: 0,
+  form: [],
+})
+
+const MAX_FORM_ENTRIES = 5
+
+export class LeagueStatsCalculator {
+  private teamStats: Map<string, TeamStats>
+
+  constructor(private matches: Match[]) {
+    this.teamStats = new Map()
+    this.processMatches()
+  }
+
+  private ensureTeamExists(team: string): void {
+    if (!this.teamStats.has(team)) {
+      this.teamStats.set(team, createInitialTeamStats(team))
+    }
+  }
+
+  private updateTeamStats(team: string, goalsFor: number, goalsAgainst: number, result: "W" | "D" | "L"): void {
+    const stats = this.teamStats.get(team)!
+    stats.played++
+    stats.goalsFor += goalsFor
+    stats.goalsAgainst += goalsAgainst
+    stats.goalDifference = stats.goalsFor - stats.goalsAgainst
+
+    switch (result) {
+      case "W":
+        stats.won++
+        stats.points += 3
+        break
+      case "D":
+        stats.drawn++
+        stats.points++
+        break
+      case "L":
+        stats.lost++
+        break
+    }
+
+    stats.form.push(result)
+    if (stats.form.length > MAX_FORM_ENTRIES) {
+      stats.form = stats.form.slice(-MAX_FORM_ENTRIES)
+    }
+  }
+
+  private processMatches(): void {
+    for (const match of this.matches) {
+      try {
+        matchSchema.parse(match)
+
+        const { home_team, away_team, home_score, away_score } = match
+        this.ensureTeamExists(home_team)
+        this.ensureTeamExists(away_team)
+
+        if (home_score > away_score) {
+          this.updateTeamStats(home_team, home_score, away_score, "W")
+          this.updateTeamStats(away_team, away_score, home_score, "L")
+        } else if (home_score < away_score) {
+          this.updateTeamStats(home_team, home_score, away_score, "L")
+          this.updateTeamStats(away_team, away_score, home_score, "W")
         } else {
-          // Draw
-          teamStats[homeTeamIndex].draws += 1;
-          teamStats[homeTeamIndex].points += 1;
-          teamStats[awayTeamIndex].draws += 1;
-          teamStats[awayTeamIndex].points += 1;
+          this.updateTeamStats(home_team, home_score, away_score, "D")
+          this.updateTeamStats(away_team, away_score, home_score, "D")
         }
-      }
-    }
-  });
-
-  // Sort teams by points, then goal difference, then goals scored
-  teamStats.sort((a, b) => {
-    if (a.points !== b.points) {
-      return b.points - a.points;
-    } else if (a.goalDiff !== b.goalDiff) {
-      return b.goalDiff - a.goalDiff;
-    } else {
-      return b.goalsFor - a.goalsFor;
-    }
-  });
-
-  return teamStats;
-};
-
-export const generateMatchSchedule = (teams: string[]): Match[] => {
-  const matches: Match[] = [];
-  const numberOfTeams = teams.length;
-  
-  // Ensure even number of teams
-  const teamsToSchedule = [...teams];
-  if (numberOfTeams % 2 !== 0) {
-    teamsToSchedule.push("BYE");
-  }
-  
-  const totalRounds = teamsToSchedule.length - 1;
-  const matchesPerRound = teamsToSchedule.length / 2;
-  
-  // Create pairs for the first round
-  const teamsCopy = [...teamsToSchedule];
-  const firstTeam = teamsCopy.shift()!; // Remove first team
-  
-  // For each round
-  for (let round = 0; round < totalRounds; round++) {
-    // First team vs rotating team
-    if (firstTeam !== "BYE" && teamsCopy[round] !== "BYE") {
-      matches.push({
-        id: `match-${matches.length + 1}`,
-        homeTeam: firstTeam,
-        awayTeam: teamsCopy[round],
-        homeGoals: 0,
-        awayGoals: 0,
-        played: false,
-        matchday: round + 1
-      });
-    }
-    
-    // Rest of the teams
-    for (let match = 0; match < matchesPerRound - 1; match++) {
-      const home = teamsCopy[(round + match + 1) % teamsCopy.length];
-      const away = teamsCopy[(round + teamsCopy.length - match - 1) % teamsCopy.length];
-      if (home !== "BYE" && away !== "BYE") {
-        matches.push({
-          id: `match-${matches.length + 1}`,
-          homeTeam: home,
-          awayTeam: away,
-          homeGoals: 0,
-          awayGoals: 0,
-          played: false,
-          matchday: round + 1
-        });
+      } catch (error) {
+        console.error("Invalid match data:", error)
+        continue
       }
     }
   }
-  
-  // Create return matches (swapping home and away)
-  const firstRoundMatches = [...matches];
-  for (const match of firstRoundMatches) {
-    matches.push({
-      id: `match-${matches.length + 1}`,
-      homeTeam: match.awayTeam,
-      awayTeam: match.homeTeam,
-      homeGoals: 0,
-      awayGoals: 0,
-      played: false,
-      matchday: match.matchday + totalRounds
-    });
+
+  private sortTeams<T extends { points: number; goalDifference: number; goalsFor: number }>(teams: T[]): T[] {
+    return teams.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor
+      return a.team.localeCompare(b.team) // Alphabetical as final tiebreaker
+    })
   }
-  
-  return matches;
-};
+
+  public getStandings(): StandingsEntry[] {
+    if (this.teamStats.size === 0) return []
+
+    const previousStandings = new Map(
+      Array.from(this.teamStats.entries()).map(([team, stats], index) => [team, { ...stats, position: index + 1 }]),
+    )
+
+    const currentStandings = this.sortTeams(Array.from(this.teamStats.values())).map((stats, index) => ({
+      ...stats,
+      position: index + 1,
+      previousPosition: previousStandings.get(stats.team)?.position,
+    }))
+
+    return currentStandings
+  }
+
+  public getTeamForms(): TeamForm[] {
+    if (this.teamStats.size === 0) return []
+
+    return this.sortTeams(
+      Array.from(this.teamStats.values()).map((stats) => ({
+        position: 0, // Will be set after sorting
+        team: stats.team,
+        played: stats.played,
+        goalsFor: stats.goalsFor,
+        goalsAgainst: stats.goalsAgainst,
+        points: stats.points,
+        form: [...stats.form],
+      })),
+    ).map((form, index) => ({
+      ...form,
+      position: index + 1,
+    }))
+  }
+}
+
+export function calculateStandings(matches: Match[]): StandingsEntry[] {
+  const calculator = new LeagueStatsCalculator(matches)
+  return calculator.getStandings()
+}
+
+export function calculateTeamForms(matches: Match[]): TeamForm[] {
+  const calculator = new LeagueStatsCalculator(matches)
+  return calculator.getTeamForms()
+}
