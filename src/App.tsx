@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
@@ -108,7 +109,7 @@ export default function App() {
   )
 
   const handleCreateLeague = useCallback(
-    (leagueId: string) => {
+    async (leagueId: string) => { // Changed to async function to return Promise<void>
       const newLeague: LeagueData = {
         id: leagueId,
         name: `League ${leagueId}`,

@@ -1,3 +1,4 @@
+
 export interface LeagueData {
   id: string
   name: string
@@ -26,5 +27,5 @@ export interface TeamForm {
   goalsFor: number
   goalsAgainst: number
   points: number
-  form: string
+  form: Array<"W" | "D" | "L"> // Changed from string to an array of specific values
 }

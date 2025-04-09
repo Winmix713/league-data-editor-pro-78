@@ -30,6 +30,7 @@ export interface TeamForm {
   played: number
   goalsFor: number
   goalsAgainst: number
+  goalDifference: number
   points: number
   form: Array<"W" | "D" | "L">
 }
@@ -118,7 +119,7 @@ export class LeagueStatsCalculator {
     }
   }
 
-  private sortTeams<T extends { points: number; goalDifference: number; goalsFor: number }>(teams: T[]): T[] {
+  private sortTeams<T extends { team: string; points: number; goalDifference: number; goalsFor: number }>(teams: T[]): T[] {
     return teams.sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points
       if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference
@@ -146,17 +147,18 @@ export class LeagueStatsCalculator {
   public getTeamForms(): TeamForm[] {
     if (this.teamStats.size === 0) return []
 
-    return this.sortTeams(
-      Array.from(this.teamStats.values()).map((stats) => ({
-        position: 0, // Will be set after sorting
-        team: stats.team,
-        played: stats.played,
-        goalsFor: stats.goalsFor,
-        goalsAgainst: stats.goalsAgainst,
-        points: stats.points,
-        form: [...stats.form],
-      })),
-    ).map((form, index) => ({
+    const teamForms: TeamForm[] = Array.from(this.teamStats.values()).map((stats) => ({
+      position: 0, // Will be set after sorting
+      team: stats.team,
+      played: stats.played,
+      goalsFor: stats.goalsFor,
+      goalsAgainst: stats.goalsAgainst,
+      goalDifference: stats.goalDifference,
+      points: stats.points,
+      form: [...stats.form],
+    }))
+
+    return this.sortTeams(teamForms).map((form, index) => ({
       ...form,
       position: index + 1,
     }))
