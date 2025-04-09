@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -13,6 +14,7 @@ import { calculateStandings, calculateTeamForms } from "../utils/calculations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 
 interface LeagueDetailsProps {
   league: LeagueData
@@ -38,6 +40,7 @@ export const LeagueDetails = memo(
       onUpdateLeague(editedLeague)
       setIsEditing(false)
       setIsSaveDisabled(true)
+      toast("League details saved successfully")
     }, [editedLeague, onUpdateLeague])
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,41 +54,70 @@ export const LeagueDetails = memo(
         const file = event.target.files?.[0]
         if (!file) return
 
-        Papa.parse<Match>(file, {
+        Papa.parse(file, {
           header: true,
           complete: (result) => {
-            const parsedMatches = result.data
-              .filter(
-                (match): match is Match =>
-                  match.date !== undefined &&
-                  match.home_team !== undefined &&
-                  match.away_team !== undefined &&
-                  match.ht_home_score !== undefined &&
-                  match.ht_away_score !== undefined &&
-                  match.home_score !== undefined &&
-                  match.away_score !== undefined,
-              )
-              .map((match) => ({
-                ...match,
-                ht_home_score: Number(match.ht_home_score),
-                ht_away_score: Number(match.ht_away_score),
-                home_score: Number(match.home_score),
-                away_score: Number(match.away_score),
-                round: match.round || "Unknown",
-              }))
+            try {
+              const parsedMatches = result.data
+                .filter((rawMatch: any) => {
+                  // Make sure all required fields exist
+                  return (
+                    rawMatch.date !== undefined &&
+                    (rawMatch.Home_team || rawMatch.home_team) !== undefined &&
+                    (rawMatch.Away_team || rawMatch.away_team) !== undefined &&
+                    (rawMatch["Half/Home"] || rawMatch.ht_home_score) !== undefined &&
+                    (rawMatch["Half/Away"] || rawMatch.ht_away_score) !== undefined &&
+                    (rawMatch["Full/Home"] || rawMatch.home_score) !== undefined &&
+                    (rawMatch["Full/Away"] || rawMatch.away_score) !== undefined
+                  )
+                })
+                .map((rawMatch: any) => {
+                  // Map the CSV columns to our Match type
+                  const match: Match = {
+                    date: rawMatch.date,
+                    home_team: rawMatch.Home_team || rawMatch.home_team,
+                    away_team: rawMatch.Away_team || rawMatch.away_team,
+                    ht_home_score: Number(rawMatch["Half/Home"] || rawMatch.ht_home_score),
+                    ht_away_score: Number(rawMatch["Half/Away"] || rawMatch.ht_away_score),
+                    home_score: Number(rawMatch["Full/Home"] || rawMatch.home_score),
+                    away_score: Number(rawMatch["Full/Away"] || rawMatch.away_score),
+                    round: rawMatch.round || "1",
+                  }
+                  return match
+                })
 
-            if (parsedMatches.length === 0) {
-              alert("No valid matches found in the CSV file. Please check the format and try again.")
-              return
+              if (parsedMatches.length === 0) {
+                toast({
+                  title: "Error",
+                  description: "No valid matches found in the CSV file. Please check the format and try again.",
+                  variant: "destructive",
+                })
+                return
+              }
+
+              onUpdateMatches(parsedMatches)
+              setDataLoaded(true)
+              setIsSaveDisabled(false)
+              toast({
+                title: "Success",
+                description: `${parsedMatches.length} matches imported successfully`,
+              })
+            } catch (error) {
+              console.error("Error processing CSV data:", error)
+              toast({
+                title: "Error",
+                description: "Failed to process CSV file. Please check the format and try again.",
+                variant: "destructive",
+              })
             }
-
-            onUpdateMatches(parsedMatches)
-            setDataLoaded(true)
-            setIsSaveDisabled(false)
           },
           error: (error) => {
             console.error("Error parsing CSV:", error)
-            alert("Failed to parse CSV file. Please check the format and try again.")
+            toast({
+              title: "Error",
+              description: "Failed to parse CSV file. Please check the format and try again.",
+              variant: "destructive",
+            })
           },
         })
       },
