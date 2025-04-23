@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { memo } from "react"
-import { Search, Plus, Eye, Edit2, CheckCircle, Trash2, Trophy, Clock } from "lucide-react"
-import type React from "react"
-import type { LeagueData } from "../types"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { memo } from "react";
+import { Search, Plus, Eye, Edit2, CheckCircle, Trash2, Trophy, Clock } from "lucide-react";
+import type React from "react";
+import type { LeagueData } from "../types";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface LeagueTableProps {
-  leagues: LeagueData[]
-  onLeagueAction: (leagueId: string, action: "view" | "edit" | "complete" | "delete") => void
-  onSearch: (term: string) => void
-  onNewLeague: () => void
+  leagues: LeagueData[];
+  onLeagueAction: (leagueId: string, action: "view" | "edit" | "complete" | "delete") => void;
+  onSearch: (term: string) => void;
+  onNewLeague: () => void;
 }
 
 const ActionButton = memo(
@@ -21,17 +21,17 @@ const ActionButton = memo(
     label,
     variant,
   }: {
-    onClick: () => void
-    icon: React.ReactNode
-    label: string
-    variant: "blue" | "yellow" | "green" | "red"
+    onClick: () => void;
+    icon: React.ReactNode;
+    label: string;
+    variant: "blue" | "yellow" | "green" | "red";
   }) => {
     const colors = {
       blue: "text-blue-400 hover:bg-blue-500/20",
       yellow: "text-amber-400 hover:bg-amber-500/20",
       green: "text-emerald-400 hover:bg-emerald-500/20",
       red: "text-red-400 hover:bg-red-500/20",
-    }
+    };
 
     return (
       <Button
@@ -43,11 +43,11 @@ const ActionButton = memo(
       >
         {icon}
       </Button>
-    )
-  },
-)
+    );
+  }
+);
 
-ActionButton.displayName = "ActionButton"
+ActionButton.displayName = "ActionButton";
 
 const SearchBar = memo(({ onSearch }: { onSearch: (term: string) => void }) => (
   <div className="relative w-full sm:w-80">
@@ -62,9 +62,9 @@ const SearchBar = memo(({ onSearch }: { onSearch: (term: string) => void }) => (
       aria-label="Search leagues"
     />
   </div>
-))
+));
 
-SearchBar.displayName = "SearchBar"
+SearchBar.displayName = "SearchBar";
 
 const StatusBadge = memo(({ status }: { status: string }) => (
   <span
@@ -76,9 +76,9 @@ const StatusBadge = memo(({ status }: { status: string }) => (
     {status === "In Progress" ? <Clock className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
     {status}
   </span>
-))
+));
 
-StatusBadge.displayName = "StatusBadge"
+StatusBadge.displayName = "StatusBadge";
 
 export const LeagueTable = memo(({ leagues, onLeagueAction, onSearch, onNewLeague }: LeagueTableProps) => {
   return (
@@ -164,7 +164,7 @@ export const LeagueTable = memo(({ leagues, onLeagueAction, onSearch, onNewLeagu
         </div>
       </div>
     </div>
-  )
-})
+  );
+});
 
-LeagueTable.displayName = "LeagueTable"
+LeagueTable.displayName = "LeagueTable";
