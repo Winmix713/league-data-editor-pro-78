@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -13,7 +14,7 @@ import { calculateStandings, calculateTeamForms } from "../utils/calculations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/use-toast"
 
 interface LeagueDetailsProps {
   league: LeagueData
@@ -21,10 +22,11 @@ interface LeagueDetailsProps {
   onBack: () => void
   onUpdateLeague: (updatedLeague: LeagueData) => void
   onUpdateMatches: (matches: Match[]) => void
+  onNavigateToTab?: (tabName: string) => void
 }
 
 export const LeagueDetails = memo(
-  ({ league, matches, onBack, onUpdateLeague, onUpdateMatches }: LeagueDetailsProps) => {
+  ({ league, matches, onBack, onUpdateLeague, onUpdateMatches, onNavigateToTab }: LeagueDetailsProps) => {
     const [activeTab, setActiveTab] = useState<string>("matches")
     const [isEditing, setIsEditing] = useState(false)
     const [editedLeague, setEditedLeague] = useState(league)
@@ -39,7 +41,9 @@ export const LeagueDetails = memo(
       onUpdateLeague(editedLeague)
       setIsEditing(false)
       setIsSaveDisabled(true)
-      toast("League details saved successfully")
+      toast({
+        description: "League details saved successfully"
+      })
     }, [editedLeague, onUpdateLeague])
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,32 +63,35 @@ export const LeagueDetails = memo(
             try {
               const parsedMatches = result.data
                 .filter((rawMatch: any) => {
+                  // Filter out any rows that don't have all required fields
                   return (
                     rawMatch.date !== undefined &&
-                    (rawMatch.Home_team || rawMatch.home_team) !== undefined &&
-                    (rawMatch.Away_team || rawMatch.away_team) !== undefined &&
-                    (rawMatch["Half/Home"] || rawMatch.ht_home_score) !== undefined &&
-                    (rawMatch["Half/Away"] || rawMatch.ht_away_score) !== undefined &&
-                    (rawMatch["Full/Home"] || rawMatch.home_score) !== undefined &&
-                    (rawMatch["Full/Away"] || rawMatch.away_score) !== undefined
+                    (rawMatch.home_team || rawMatch.Home_team) !== undefined &&
+                    (rawMatch.away_team || rawMatch.Away_team) !== undefined &&
+                    (rawMatch["ht_home_score"] || rawMatch["Half/Home"]) !== undefined &&
+                    (rawMatch["ht_away_score"] || rawMatch["Half/Away"]) !== undefined &&
+                    (rawMatch["home_score"] || rawMatch["Full/Home"]) !== undefined &&
+                    (rawMatch["away_score"] || rawMatch["Full/Away"]) !== undefined
                   )
                 })
-                .map((rawMatch: any) => ({
-                  date: rawMatch.date,
-                  home_team: rawMatch.Home_team || rawMatch.home_team,
-                  away_team: rawMatch.Away_team || rawMatch.away_team,
-                  ht_home_score: Number(rawMatch["Half/Home"] || rawMatch.ht_home_score),
-                  ht_away_score: Number(rawMatch["Half/Away"] || rawMatch.ht_away_score),
-                  home_score: Number(rawMatch["Full/Home"] || rawMatch.home_score),
-                  away_score: Number(rawMatch["Full/Away"] || rawMatch.away_score),
-                  round: rawMatch.round || "1",
-                }))
+                .map((rawMatch: any) => {
+                  // Map to our Match format
+                  return {
+                    date: rawMatch.date || "",
+                    home_team: rawMatch.home_team || rawMatch.Home_team || "",
+                    away_team: rawMatch.away_team || rawMatch.Away_team || "",
+                    ht_home_score: Number(rawMatch.ht_home_score || rawMatch["Half/Home"] || 0),
+                    ht_away_score: Number(rawMatch.ht_away_score || rawMatch["Half/Away"] || 0),
+                    home_score: Number(rawMatch.home_score || rawMatch["Full/Home"] || 0),
+                    away_score: Number(rawMatch.away_score || rawMatch["Full/Away"] || 0),
+                    round: rawMatch.round || "1",
+                  }
+                })
 
               if (parsedMatches.length === 0) {
                 toast({
-                  title: "Error",
-                  description: "No valid matches found in the CSV file. Please check the format and try again.",
                   variant: "destructive",
+                  description: "No valid matches found in the CSV file. Please check the format and try again."
                 })
                 return
               }
@@ -93,24 +100,21 @@ export const LeagueDetails = memo(
               setDataLoaded(true)
               setIsSaveDisabled(false)
               toast({
-                title: "Success",
-                description: `${parsedMatches.length} matches imported successfully`,
+                description: `${parsedMatches.length} matches imported successfully`
               })
             } catch (error) {
               console.error("Error processing CSV data:", error)
               toast({
-                title: "Error",
-                description: "Failed to process CSV file. Please check the format and try again.",
                 variant: "destructive",
+                description: "Failed to process CSV file. Please check the format and try again."
               })
             }
           },
           error: (error) => {
             console.error("Error parsing CSV:", error)
             toast({
-              title: "Error",
-              description: "Failed to parse CSV file. Please check the format and try again.",
               variant: "destructive",
+              description: "Failed to parse CSV file. Please check the format and try again."
             })
           },
         })
@@ -134,7 +138,7 @@ export const LeagueDetails = memo(
             Back to Leagues
           </Button>
           <Button
-            onClick={() => setIsEditing((prev) => !prev)}
+            onClick={isEditing ? handleSave : () => setIsEditing(true)}
             variant={isEditing ? "default" : "outline"}
             className={`gap-2 ${isEditing ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-white/5 border-white/10 text-white hover:bg-white/10"}`}
           >
