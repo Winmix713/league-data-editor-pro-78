@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import LeagueSeasons from "@/components/LeagueSeasons";
 import LeagueEditor from "@/components/LeagueEditor";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
