@@ -8,15 +8,18 @@ import { MatchesTable } from "../MatchesTable"
 import { StandingsTable } from "../StandingsTable"
 import { FormTable } from "../FormTable"
 import { calculateStandings, calculateTeamForms } from "../../utils/calculations"
+import LeagueStatsDashboard from "../dashboard/LeagueStatsDashboard"
 
 interface LeagueTabsViewProps {
   matches: Match[]
+  league: any // Add league prop
   defaultTab?: string
   onTabChange?: (tab: string) => void
 }
 
 export const LeagueTabsView = ({ 
   matches, 
+  league, // Add league parameter
   defaultTab = "matches",
   onTabChange 
 }: LeagueTabsViewProps) => {
@@ -25,7 +28,7 @@ export const LeagueTabsView = ({
 
   return (
     <Tabs defaultValue={defaultTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid grid-cols-3 bg-black/20 w-full rounded-xl">
+      <TabsList className="grid grid-cols-4 bg-black/20 w-full rounded-xl">
         <TabsTrigger
           value="matches"
           className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
@@ -44,6 +47,12 @@ export const LeagueTabsView = ({
         >
           Form
         </TabsTrigger>
+        <TabsTrigger
+          value="statistics"
+          className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
+        >
+          Statistics
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="matches" className="p-0 mt-6">
@@ -54,6 +63,9 @@ export const LeagueTabsView = ({
       </TabsContent>
       <TabsContent value="form" className="p-0 mt-6">
         <FormTable teamForms={teamForms} />
+      </TabsContent>
+      <TabsContent value="statistics" className="p-0 mt-6">
+        <LeagueStatsDashboard league={league} matches={matches} />
       </TabsContent>
     </Tabs>
   )

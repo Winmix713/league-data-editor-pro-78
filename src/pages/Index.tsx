@@ -11,7 +11,11 @@ import IntegrationCards from "@/components/dashboard/IntegrationCards";
 import ContentTabs from "@/components/dashboard/ContentTabs";
 import MatchSchedule from "@/components/MatchSchedule";
 import { LeagueDetails } from "@/components/LeagueDetails";
-import MatchDetail from "@/components/MatchDetail"; // Import the MatchDetail component
+import MatchDetail from "@/components/MatchDetail";
+import MobileSidebar from "@/components/layout/MobileSidebar";
+import ExportData from "@/components/export/ExportData";
+import LeagueStatsDashboard from "@/components/dashboard/LeagueStatsDashboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { LeagueData, Match } from "@/types";
 
 const Matches = () => {
@@ -22,6 +26,8 @@ const Matches = () => {
   const [dataUpdatedAt, setDataUpdatedAt] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentRoute, setCurrentRoute] = useState('/');
+  const isMobile = useIsMobile();
 
   // State for MatchDetail dialog
   const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
@@ -54,6 +60,18 @@ const Matches = () => {
     toast("Matches updated.");
   };
 
+  const handleNavigate = (route: string) => {
+    setCurrentRoute(route);
+    // Handle navigation based on routes
+    if (route === '/') {
+      setActiveTab('league-list');
+    } else if (route === '/leagues') {
+      setActiveTab('league-list');
+    } else if (route === '/statistics' && selectedLeague) {
+      setActiveTab('statistics');
+    }
+  };
+
   const seasonSelector = (
     <div className="relative flex items-center">
       <Button variant="outline" className="bg-black/20 border-white/10 text-white flex items-center gap-2">
@@ -84,74 +102,121 @@ const Matches = () => {
     setIsMatchDetailOpen(true);
   };
 
-  return (
-    <div className="min-h-screen pt-24 pb-16 bg-background">
-      <Header />
-      <div className="container mx-auto px-4">
-        {isEditing ? (
-          <LeagueEditor onBack={handleBackFromEditor} />
-        ) : (
-          <div className="flex flex-col space-y-6">
-            <DashboardHeader
-              title="V-SPORTS ELEMZŐ RENDSZER"
-              subtitle="Professzionális Elemzés és Predikció"
-              dataUpdatedAt={dataUpdatedAt}
-              isRefreshing={isRefreshing}
-              onRefresh={handleRefreshData}
-              actionButton={seasonSelector}
+  const renderContent = () => {
+    if (isEditing) {
+      return <LeagueEditor onBack={handleBackFromEditor} />;
+    }
+    
+    if (activeTab === "league-list") {
+      return (
+        <>
+          <DashboardHeader
+            title="V-SPORTS ELEMZŐ RENDSZER"
+            subtitle="Professzionális Elemzés és Predikció"
+            dataUpdatedAt={dataUpdatedAt}
+            isRefreshing={isRefreshing}
+            onRefresh={handleRefreshData}
+            actionButton={seasonSelector}
+          />
+
+          <IntegrationCards />
+          
+          <LeagueSeasons
+            onEdit={() => setIsEditing(true)}
+            onSelect={handleSelectLeague}
+          />
+        </>
+      );
+    }
+
+    if (activeTab === "league-details" && selectedLeague) {
+      return (
+        <LeagueDetails
+          league={selectedLeague}
+          matches={matches}
+          onBack={handleBackToList}
+          onUpdateLeague={handleLeagueUpdate}
+          onUpdateMatches={handleMatchesUpdate}
+          onNavigateToTab={(tabName: string) => setActiveTab(tabName)}
+        />
+      );
+    }
+
+    if (["matches", "standings", "form", "statistics"].includes(activeTab) && selectedLeague) {
+      return (
+        <>
+          <Button onClick={() => setActiveTab('league-details')} variant="outline" className="self-start mb-6">
+            ← Back to League Details
+          </Button>
+
+          <ContentTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isLoading={isLoading}
+          />
+
+          {activeTab === "matches" && (
+            <MatchSchedule
+              matches={matches}
+              league={selectedLeague}
+              isLoading={isLoading}
+              onMatchClick={handleOpenMatchDetail}
             />
-
-            <IntegrationCards />
-
-            {activeTab === "league-list" && (
-              <LeagueSeasons
-                onEdit={() => setIsEditing(true)}
-                onSelect={handleSelectLeague}
-              />
-            )}
-
-            {activeTab === "league-details" && selectedLeague && (
-              <LeagueDetails
-                league={selectedLeague}
-                matches={matches}
-                onBack={handleBackToList}
-                onUpdateLeague={handleLeagueUpdate}
-                onUpdateMatches={handleMatchesUpdate}
-                onNavigateToTab={(tabName: string) => setActiveTab(tabName)}
-              />
-            )}
-
-            {["matches", "standings", "form"].includes(activeTab) && selectedLeague && (
-              <>
-                <Button onClick={() => setActiveTab('league-details')} variant="outline" className="self-start">
-                  ← Back to League Details
-                </Button>
-
-                <ContentTabs
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  isLoading={isLoading}
-                />
-
-                {activeTab === "matches" && (
-                  <MatchSchedule
-                    matches={matches}
-                    league={selectedLeague}
-                    isLoading={isLoading}
-                    onMatchClick={handleOpenMatchDetail} // Pass the handler to MatchSchedule
-                  />
-                )}
-              </>
-            )}
-
-            {["matches", "standings", "form"].includes(activeTab) && !selectedLeague && (
-              <div className="text-center py-8 text-muted-foreground">
-                Please select a league from the 'League List' tab first.
-                <Button onClick={() => setActiveTab('league-list')} variant="link">Go to League List</Button>
+          )}
+          
+          {activeTab === "statistics" && selectedLeague && (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                {/* Import the statistics dashboard component here */}
+                <div className="bg-black/20 rounded-xl border border-white/5 p-6">
+                  {isMobile ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400">
+                        For the best experience, please view statistics on a larger screen.
+                        <Button onClick={() => setActiveTab('league-details')} variant="link" className="px-1">
+                          Go back
+                        </Button>
+                      </p>
+                    </div>
+                  ) : (
+                    selectedLeague && <LeagueStatsDashboard league={selectedLeague} matches={matches} />
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+              <div className="xl:col-span-1">
+                <ExportData league={selectedLeague} matches={matches} />
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (["matches", "standings", "form"].includes(activeTab) && !selectedLeague) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          Please select a league from the 'League List' tab first.
+          <Button onClick={() => setActiveTab('league-list')} variant="link">Go to League List</Button>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="min-h-screen pt-16 pb-16 bg-background">
+      <Header />
+      
+      <div className="container mx-auto px-4 pt-8">
+        <div className="flex items-center gap-4 mb-6">
+          <MobileSidebar onNavigate={handleNavigate} currentRoute={currentRoute} />
+          {isMobile && <h1 className="text-xl font-bold">Soccer Stats Pro</h1>}
+        </div>
+        
+        <div className="flex flex-col space-y-6">
+          {renderContent()}
+        </div>
 
         {selectedMatch && (
           <MatchDetail

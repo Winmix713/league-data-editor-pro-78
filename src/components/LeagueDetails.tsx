@@ -61,7 +61,8 @@ export const LeagueDetails = memo(
         )}
 
         <LeagueTabsView 
-          matches={matches} 
+          matches={matches}
+          league={league}
           defaultTab={activeTab}
           onTabChange={handleTabChange}
         />
