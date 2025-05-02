@@ -7,7 +7,7 @@ import { Edit, Trophy } from "lucide-react";
 import type { LeagueData, Match } from "@/types";
 
 // Sample data for demonstration
-const leaguesData = [
+const leaguesData: LeagueData[] = [
   {
     id: "premier-league",
     name: "Premier League",
@@ -15,7 +15,7 @@ const leaguesData = [
     winner: "-",
     secondPlace: "-",
     thirdPlace: "-",
-    status: "In Progress",
+    status: "In Progress", // Using the correct union type value
   },
   {
     id: "la-liga",
@@ -24,7 +24,7 @@ const leaguesData = [
     winner: "-",
     secondPlace: "-",
     thirdPlace: "-",
-    status: "In Progress",
+    status: "In Progress", // Using the correct union type value
   },
   {
     id: "bundesliga",
@@ -33,7 +33,7 @@ const leaguesData = [
     winner: "-",
     secondPlace: "-",
     thirdPlace: "-",
-    status: "In Progress",
+    status: "In Progress", // Using the correct union type value
   }
 ];
 
