@@ -8,6 +8,7 @@ import type { Match, LeagueData } from "../../types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface LeagueEditFormProps {
   league: LeagueData
@@ -26,6 +27,7 @@ export const LeagueEditForm = ({
   const [isSaveDisabled, setIsSaveDisabled] = useState(true)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +53,45 @@ export const LeagueEditForm = ({
       if (!file) return
 
       setFileName(file.name)
+      setImportError(null)
       
       Papa.parse(file, {
         header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => {
+          // Trim any whitespace that might be in the header
+          return header.trim();
+        },
         complete: (result) => {
           try {
+            console.log("CSV parsing result:", result);
+            
+            // Check if parsing had errors
+            if (result.errors && result.errors.length > 0) {
+              console.error("CSV parsing errors:", result.errors);
+              setImportError("CSV parsing errors detected. Please check format.");
+              toast.error("CSV parsing errors detected");
+              return;
+            }
+            
+            // Check if we have data
+            if (!result.data || result.data.length === 0) {
+              setImportError("No data found in CSV file");
+              toast.error("No data found in CSV file");
+              return;
+            }
+            
+            // Validate required columns
+            const requiredColumns = ["date", "home_team", "away_team", "home_score", "away_score"];
+            const headers = Object.keys(result.data[0]);
+            const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+            
+            if (missingColumns.length > 0) {
+              setImportError(`Missing required columns: ${missingColumns.join(", ")}. Please check the CSV format.`);
+              toast.error(`Missing columns: ${missingColumns.join(", ")}`);
+              return;
+            }
+            
             const currentYear = new Date().getFullYear()
             const parsedMatches = result.data
               .filter((rawMatch: any) => {
@@ -97,8 +133,9 @@ export const LeagueEditForm = ({
               })
 
             if (parsedMatches.length === 0) {
-              toast.error("No valid matches found in the CSV file. Please check the format and try again.")
-              return
+              setImportError("No valid matches found in the CSV file. Please check the format.");
+              toast.error("No valid matches found in the CSV file. Please check the format and try again.");
+              return;
             }
 
             onUpdateMatches(parsedMatches)
@@ -107,11 +144,13 @@ export const LeagueEditForm = ({
             toast.success(`${parsedMatches.length} matches imported successfully`)
           } catch (error) {
             console.error("Error processing CSV data:", error)
+            setImportError("Failed to process CSV file. Please check the format and try again.");
             toast.error("Failed to process CSV file. Please check the format and try again.")
           }
         },
         error: (error) => {
           console.error("Error parsing CSV:", error)
+          setImportError("Failed to parse CSV file. Please check the format and try again.");
           toast.error("Failed to parse CSV file. Please check the format and try again.")
         },
       })
@@ -152,6 +191,14 @@ export const LeagueEditForm = ({
         </div>
       </div>
 
+      {importError && (
+        <Alert variant="destructive" className="bg-red-950/50 border-red-800 text-red-200">
+          <AlertDescription>
+            {importError}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="w-full sm:w-auto flex-grow">
           <label htmlFor="csv-upload" className="block text-gray-300 text-sm mb-2">
@@ -185,6 +232,14 @@ export const LeagueEditForm = ({
               Data loaded successfully
             </p>
           )}
+          
+          <div className="mt-3 text-xs text-gray-400">
+            <p>Expected CSV format:</p>
+            <code className="block mt-1 p-2 bg-black/30 rounded text-gray-300 font-mono text-xs overflow-x-auto">
+              date,home_team,away_team,ht_home_score,ht_away_score,home_score,away_score<br/>
+              21:10,Fulham,Brighton,0,1,1,1
+            </code>
+          </div>
         </div>
 
         <Button
@@ -199,3 +254,4 @@ export const LeagueEditForm = ({
     </div>
   )
 }
+
