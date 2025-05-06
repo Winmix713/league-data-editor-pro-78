@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { CustomInput } from "@/components/ui/custom-input";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MatchesTable } from "./MatchesTable";
+import type { Match } from "../types";
 
 interface LeagueEditorProps {
   onBack: () => void;
@@ -18,6 +20,7 @@ const LeagueEditor = ({ onBack, league = { name: "Premier League", season: "2023
   const [leagueData, setLeagueData] = useState(league);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileUploaded, setFileUploaded] = useState(false);
+  const [matches, setMatches] = useState<Match[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,8 +31,75 @@ const LeagueEditor = ({ onBack, league = { name: "Premier League", season: "2023
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setFileName(file.name);
-      setFileUploaded(true);
-      toast.success("File uploaded successfully");
+      
+      // Use PapaParse to parse the CSV file
+      import('papaparse').then((Papa) => {
+        Papa.default.parse(file, {
+          header: true,
+          complete: (results) => {
+            try {
+              const currentYear = new Date().getFullYear();
+              const parsedMatches = results.data
+                .filter((rawMatch: any) => {
+                  // Filter out empty rows and header rows
+                  return (
+                    rawMatch.date !== undefined &&
+                    rawMatch.home_team !== undefined &&
+                    rawMatch.away_team !== undefined
+                  )
+                })
+                .map((rawMatch: any, index: number) => {
+                  // Format the date - if it's only a time, add today's date
+                  let dateValue = rawMatch.date || "";
+                  if (dateValue && dateValue.match(/^\d{2}:\d{2}$/)) {
+                    // It's just a time, let's add a synthetic date using the round number
+                    // Each 8 matches creates a new round, starting from today
+                    const roundIndex = Math.floor(index / 8);
+                    const syntheticDate = new Date();
+                    syntheticDate.setDate(syntheticDate.getDate() + (roundIndex * 7)); // One round per week
+                    const month = String(syntheticDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(syntheticDate.getDate()).padStart(2, '0');
+                    dateValue = `${currentYear}-${month}-${day} ${dateValue}`;
+                  }
+
+                  // Calculate round number (1-based, every 8 matches is a new round)
+                  const roundNumber = Math.floor(index / 8) + 1;
+                  
+                  // Map to our Match format
+                  return {
+                    date: dateValue,
+                    home_team: rawMatch.home_team || "",
+                    away_team: rawMatch.away_team || "",
+                    ht_home_score: Number(rawMatch.ht_home_score || 0),
+                    ht_away_score: Number(rawMatch.ht_away_score || 0),
+                    home_score: Number(rawMatch.home_score || 0),
+                    away_score: Number(rawMatch.away_score || 0),
+                    round: `Round ${roundNumber}`,
+                  };
+                });
+
+              if (parsedMatches.length === 0) {
+                toast.error("No valid matches found in the CSV file");
+                return;
+              }
+
+              setMatches(parsedMatches as Match[]);
+              setFileUploaded(true);
+              toast.success(`${parsedMatches.length} matches imported successfully`);
+            } catch (error) {
+              console.error("Error processing CSV data:", error);
+              toast.error("Failed to process CSV file");
+            }
+          },
+          error: (error) => {
+            console.error("Error parsing CSV:", error);
+            toast.error("Failed to parse CSV file");
+          }
+        });
+      }).catch(err => {
+        console.error("Error loading PapaParse:", err);
+        toast.error("Failed to load CSV parser");
+      });
     }
   };
 
@@ -114,6 +184,13 @@ const LeagueEditor = ({ onBack, league = { name: "Premier League", season: "2023
                     {fileName ? fileName : "No file chosen"}
                   </span>
                 </div>
+                
+                {fileUploaded && (
+                  <p className="text-sm text-emerald-400 mt-2 flex items-center">
+                    <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                    Data loaded successfully
+                  </p>
+                )}
               </div>
               
               <Button 
@@ -151,20 +228,36 @@ const LeagueEditor = ({ onBack, league = { name: "Premier League", season: "2023
             </TabsList>
             
             <TabsContent value="matches" className="p-0 mt-6">
-              <div className="bg-black/20 rounded-xl p-8 text-center border border-white/5">
-                <div className="flex flex-col items-center gap-3">
-                  <CircleAlert className="w-8 h-8 text-gray-500" />
-                  <p className="text-gray-400">No matches available for this league yet.</p>
+              {matches.length > 0 ? (
+                <MatchesTable matches={matches} />
+              ) : (
+                <div className="bg-black/20 rounded-xl p-8 text-center border border-white/5">
+                  <div className="flex flex-col items-center gap-3">
+                    <CircleAlert className="w-8 h-8 text-gray-500" />
+                    <p className="text-gray-400">No matches available for this league yet.</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
             
             <TabsContent value="standings" className="p-0 mt-6">
               {/* Standings content would go here */}
+              <div className="bg-black/20 rounded-xl p-8 text-center border border-white/5">
+                <div className="flex flex-col items-center gap-3">
+                  <CircleAlert className="w-8 h-8 text-gray-500" />
+                  <p className="text-gray-400">Standings will be generated after match data is saved.</p>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="form" className="p-0 mt-6">
               {/* Form content would go here */}
+              <div className="bg-black/20 rounded-xl p-8 text-center border border-white/5">
+                <div className="flex flex-col items-center gap-3">
+                  <CircleAlert className="w-8 h-8 text-gray-500" />
+                  <p className="text-gray-400">Form data will be generated after match data is saved.</p>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

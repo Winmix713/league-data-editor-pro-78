@@ -7,7 +7,7 @@ import Papa from "papaparse"
 import type { Match, LeagueData } from "../../types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface LeagueEditFormProps {
   league: LeagueData
@@ -25,6 +25,7 @@ export const LeagueEditForm = ({
   const [editedLeague, setEditedLeague] = useState(league)
   const [isSaveDisabled, setIsSaveDisabled] = useState(true)
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,9 +38,7 @@ export const LeagueEditForm = ({
     onUpdateLeague(editedLeague)
     onSave()
     setIsSaveDisabled(true)
-    toast({
-      description: "League details saved successfully"
-    })
+    toast.success("League details saved successfully")
   }, [editedLeague, onUpdateLeague, onSave])
 
   const triggerFileUpload = useCallback(() => {
@@ -51,65 +50,69 @@ export const LeagueEditForm = ({
       const file = event.target.files?.[0]
       if (!file) return
 
+      setFileName(file.name)
+      
       Papa.parse(file, {
         header: true,
         complete: (result) => {
           try {
+            const currentYear = new Date().getFullYear()
             const parsedMatches = result.data
               .filter((rawMatch: any) => {
-                // Filter out any rows that don't have all required fields
+                // Filter out empty rows and header rows
                 return (
                   rawMatch.date !== undefined &&
-                  (rawMatch.home_team || rawMatch.Home_team) !== undefined &&
-                  (rawMatch.away_team || rawMatch.Away_team) !== undefined &&
-                  (rawMatch["ht_home_score"] || rawMatch["Half/Home"]) !== undefined &&
-                  (rawMatch["ht_away_score"] || rawMatch["Half/Away"]) !== undefined &&
-                  (rawMatch["home_score"] || rawMatch["Full/Home"]) !== undefined &&
-                  (rawMatch["away_score"] || rawMatch["Full/Away"]) !== undefined
+                  rawMatch.home_team !== undefined &&
+                  rawMatch.away_team !== undefined
                 )
               })
-              .map((rawMatch: any) => {
+              .map((rawMatch: any, index: number) => {
+                // Format the date - if it's only a time, add today's date
+                let dateValue = rawMatch.date || ""
+                if (dateValue && dateValue.match(/^\d{2}:\d{2}$/)) {
+                  // It's just a time, let's add a synthetic date using the round number
+                  // Each 8 matches creates a new round, starting from today
+                  const roundIndex = Math.floor(index / 8)
+                  const syntheticDate = new Date()
+                  syntheticDate.setDate(syntheticDate.getDate() + (roundIndex * 7)) // One round per week
+                  const month = String(syntheticDate.getMonth() + 1).padStart(2, '0')
+                  const day = String(syntheticDate.getDate()).padStart(2, '0')
+                  dateValue = `${currentYear}-${month}-${day} ${dateValue}`
+                }
+
+                // Calculate round number (1-based, every 8 matches is a new round)
+                const roundNumber = Math.floor(index / 8) + 1
+                
                 // Map to our Match format
                 return {
-                  date: rawMatch.date || "",
-                  home_team: rawMatch.home_team || rawMatch.Home_team || "",
-                  away_team: rawMatch.away_team || rawMatch.Away_team || "",
-                  ht_home_score: Number(rawMatch.ht_home_score || rawMatch["Half/Home"] || 0),
-                  ht_away_score: Number(rawMatch.ht_away_score || rawMatch["Half/Away"] || 0),
-                  home_score: Number(rawMatch.home_score || rawMatch["Full/Home"] || 0),
-                  away_score: Number(rawMatch.away_score || rawMatch["Full/Away"] || 0),
-                  round: rawMatch.round || "1",
+                  date: dateValue,
+                  home_team: rawMatch.home_team || "",
+                  away_team: rawMatch.away_team || "",
+                  ht_home_score: Number(rawMatch.ht_home_score || 0),
+                  ht_away_score: Number(rawMatch.ht_away_score || 0),
+                  home_score: Number(rawMatch.home_score || 0),
+                  away_score: Number(rawMatch.away_score || 0),
+                  round: `Round ${roundNumber}`,
                 }
               })
 
             if (parsedMatches.length === 0) {
-              toast({
-                variant: "destructive",
-                description: "No valid matches found in the CSV file. Please check the format and try again."
-              })
+              toast.error("No valid matches found in the CSV file. Please check the format and try again.")
               return
             }
 
             onUpdateMatches(parsedMatches)
             setDataLoaded(true)
             setIsSaveDisabled(false)
-            toast({
-              description: `${parsedMatches.length} matches imported successfully`
-            })
+            toast.success(`${parsedMatches.length} matches imported successfully`)
           } catch (error) {
             console.error("Error processing CSV data:", error)
-            toast({
-              variant: "destructive",
-              description: "Failed to process CSV file. Please check the format and try again."
-            })
+            toast.error("Failed to process CSV file. Please check the format and try again.")
           }
         },
         error: (error) => {
           console.error("Error parsing CSV:", error)
-          toast({
-            variant: "destructive", 
-            description: "Failed to parse CSV file. Please check the format and try again."
-          })
+          toast.error("Failed to parse CSV file. Please check the format and try again.")
         },
       })
     },
@@ -171,10 +174,17 @@ export const LeagueEditForm = ({
               <Upload className="w-4 h-4" />
               Choose CSV File
             </Button>
-            <span className={`text-sm ${dataLoaded ? "text-emerald-400" : "text-gray-400"}`}>
-              {dataLoaded ? "✓ Data loaded successfully" : "No file chosen"}
+            <span className={`text-sm ${fileName ? "text-gray-400" : "text-gray-500"}`}>
+              {fileName || "No file chosen"}
             </span>
           </div>
+          
+          {dataLoaded && (
+            <p className="text-sm text-emerald-400 mt-2 flex items-center">
+              <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+              Data loaded successfully
+            </p>
+          )}
         </div>
 
         <Button
