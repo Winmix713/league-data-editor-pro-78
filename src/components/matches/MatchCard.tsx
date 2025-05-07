@@ -12,13 +12,14 @@ export const MatchCard = memo(({ match }: MatchCardProps) => {
   const homeWin = match.home_score > match.away_score
   const awayWin = match.home_score < match.away_score
   const draw = match.home_score === match.away_score
+  const round = match.round || "?"
 
   return (
     <div className="bg-black/30 rounded-lg border border-white/5 p-4 hover:bg-black/40 transition-colors">
       <div className="flex justify-between items-center mb-2">
         <span className="text-xs text-gray-400">{match.date}</span>
         <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20">
-          Round {match.round || "?"}
+          Round {round}
         </Badge>
       </div>
 
