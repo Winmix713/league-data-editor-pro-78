@@ -36,16 +36,16 @@ export function StatsCard({ title, value, description, color = "blue", icon }: S
 
   return (
     <div className={cn(
-      "text-center py-6 px-4 rounded-lg border",
+      "text-center py-6 px-4 rounded-m border shadow-md",
       bgColorClasses[color],
       borderColorClasses[color]
     )}>
-      {title && <p className="text-sm text-gray-400 mb-2">{title}</p>}
+      {title && <p className="text-body-s text-gray-400 mb-2">{title}</p>}
       <div className="flex items-center justify-center">
         {icon && <div className="mr-3">{icon}</div>}
-        <p className={cn("text-5xl font-bold", colorClasses[color])}>{value}</p>
+        <p className={cn("text-display-s font-bold", colorClasses[color])}>{value}</p>
       </div>
-      <p className="text-sm text-gray-400 mt-3">{description}</p>
+      <p className="text-body-s text-gray-400 mt-3">{description}</p>
     </div>
   )
 }

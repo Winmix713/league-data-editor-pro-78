@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,6 +21,35 @@
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.1);
   --ring: #3b82f6;
+  
+  /* Border radius tokens */
+  --radius-xs: 0.25rem; /* 4px */
+  --radius-s: 0.5rem;   /* 8px */
+  --radius-m: 0.75rem;  /* 12px */
+  --radius-l: 1rem;     /* 16px */
+}
+
+/* REM-based scaling */
+html {
+  font-size: 18px; /* Base 112.5% for accessibility */
+}
+
+@media all and (max-width: 1440px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+@media all and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media all and (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
 }
 
 body {
