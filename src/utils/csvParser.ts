@@ -38,6 +38,41 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
             reject(new Error(`Missing required columns: ${missingColumns.join(", ")}. Please check the CSV format.`))
             return
           }
+
+          // First pass: collect all unique timestamps for round determination
+          const uniqueTimestamps = new Set<string>()
+          
+          result.data.forEach((rawMatch: any) => {
+            if (rawMatch.date) {
+              // Extract just the time part if it's a time (HH:MM format)
+              const dateValue = typeof rawMatch.date === 'string'
+                ? rawMatch.date.replace(/^"(.*)"$/, '$1')
+                : rawMatch.date || ""
+              
+              // If it's just a time (HH:MM format), add it to our set
+              if (dateValue && dateValue.match(/^\d{2}:\d{2}$/)) {
+                uniqueTimestamps.add(dateValue)
+              }
+              // If it contains a timestamp at the end, extract and add it
+              else if (dateValue && dateValue.match(/\d{2}:\d{2}$/)) {
+                const timeMatch = dateValue.match(/(\d{2}:\d{2})$/)
+                if (timeMatch && timeMatch[1]) {
+                  uniqueTimestamps.add(timeMatch[1])
+                }
+              }
+            }
+          })
+          
+          // Sort timestamps chronologically
+          const sortedTimestamps = Array.from(uniqueTimestamps).sort()
+          
+          // Create a mapping from timestamp to round number (1-based)
+          const timestampToRound: Record<string, number> = {}
+          sortedTimestamps.forEach((timestamp, index) => {
+            timestampToRound[timestamp] = index + 1
+          })
+          
+          console.log("Timestamp to round mapping:", timestampToRound)
           
           const currentYear = new Date().getFullYear()
           const parsedMatches = result.data
@@ -55,19 +90,38 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
                 ? rawMatch.date.replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if present
                 : rawMatch.date || ""
               
-              if (dateValue && dateValue.match(/^\d{2}:\d{2}$/)) {
-                // It's just a time, let's add a synthetic date using the round number
-                // Each 8 matches creates a new round, starting from today
-                const roundIndex = Math.floor(index / 8)
+              // Extract time part for round determination
+              let timePart: string | null = null
+              let roundNumber: number | null = null
+              
+              if (dateValue.match(/^\d{2}:\d{2}$/)) {
+                // It's just a time
+                timePart = dateValue
+              } else if (dateValue.match(/\d{2}:\d{2}$/)) {
+                // It contains a timestamp at the end
+                const timeMatch = dateValue.match(/(\d{2}:\d{2})$/)
+                if (timeMatch && timeMatch[1]) {
+                  timePart = timeMatch[1]
+                }
+              }
+              
+              // Determine round based on timestamp
+              if (timePart && timestampToRound[timePart]) {
+                roundNumber = timestampToRound[timePart]
+              } else {
+                // Fallback: calculate round based on index if timestamp not found
+                roundNumber = Math.floor(index / 8) + 1
+              }
+              
+              // If it's just a time, add a synthetic date
+              if (dateValue.match(/^\d{2}:\d{2}$/)) {
+                // Create date based on the round number (each round is a week apart)
                 const syntheticDate = new Date()
-                syntheticDate.setDate(syntheticDate.getDate() + (roundIndex * 7)) // One round per week
+                syntheticDate.setDate(syntheticDate.getDate() + ((roundNumber - 1) * 7)) // One round per week
                 const month = String(syntheticDate.getMonth() + 1).padStart(2, '0')
                 const day = String(syntheticDate.getDate()).padStart(2, '0')
                 dateValue = `${currentYear}-${month}-${day} ${dateValue}`
               }
-
-              // Calculate round number (1-based, every 8 matches is a new round)
-              const roundNumber = Math.floor(index / 8) + 1
               
               // Clean data and ensure proper types
               const homeTeam = typeof rawMatch.home_team === 'string' 
