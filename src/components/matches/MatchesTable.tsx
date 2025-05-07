@@ -16,7 +16,7 @@ interface MatchesTableProps {
 
 export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
   const [viewType, setViewType] = useState<"rounds" | "all" | "cards">("rounds")
-  const { sortedMatches, matchesByRound, setFilters, requestSort, sortConfig } = useMatchFiltering(matches)
+  const { sortedMatches, matchesByRound, setFilters, requestSort, sortConfig } = useMatchFiltering(matches || [])
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -29,7 +29,7 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
     )
   }
 
-  if (matches.length === 0) {
+  if (!matches || matches.length === 0) {
     return (
       <Card className="bg-black/20 border-white/5">
         <CardContent className="p-8 text-center">

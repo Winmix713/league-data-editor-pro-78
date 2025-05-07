@@ -34,6 +34,8 @@ export const MatchesView = memo(() => {
     setIsMatchDetailOpen(false)
   }
 
+  const safeCurrentMatches = currentMatches || []
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -114,15 +116,23 @@ export const MatchesView = memo(() => {
               </TabsList>
 
               <TabsContent value="all">
-                <MatchesTable matches={currentMatches} />
+                <MatchesTable matches={safeCurrentMatches} />
               </TabsContent>
               
               <TabsContent value="upcoming">
-                <MatchesTable matches={currentMatches.filter(m => new Date(m.date) > new Date())} />
+                <MatchesTable 
+                  matches={safeCurrentMatches.filter(m => 
+                    new Date(m.date) > new Date()
+                  )} 
+                />
               </TabsContent>
               
               <TabsContent value="completed">
-                <MatchesTable matches={currentMatches.filter(m => new Date(m.date) <= new Date())} />
+                <MatchesTable 
+                  matches={safeCurrentMatches.filter(m => 
+                    new Date(m.date) <= new Date()
+                  )} 
+                />
               </TabsContent>
             </Tabs>
           </CardContent>

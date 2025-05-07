@@ -8,14 +8,14 @@ interface MatchesByRoundProps {
 
 export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => {
   // Get the round numbers and sort them
-  const rounds = Object.keys(matchesByRound).sort((a, b) => {
+  const rounds = Object.keys(matchesByRound || {}).sort((a, b) => {
     // Try to convert to numbers for numeric sorting, handling non-numeric rounds
     const numA = isNaN(Number(a)) ? Infinity : Number(a)
     const numB = isNaN(Number(b)) ? Infinity : Number(b)
     return numA - numB
   })
   
-  if (rounds.length === 0) {
+  if (!matchesByRound || rounds.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-400">No matches organized by rounds available</p>

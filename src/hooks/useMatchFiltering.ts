@@ -9,12 +9,12 @@ interface MatchFilters {
   result?: "home" | "away" | "draw" | ""
 }
 
-export function useMatchFiltering(matches: Match[], initialFilters?: MatchFilters, initialSort?: SortConfig) {
+export function useMatchFiltering(matches: Match[] = [], initialFilters?: MatchFilters, initialSort?: SortConfig) {
   const [filters, setFilters] = useState<MatchFilters>(initialFilters || {})
   const { sortConfig, requestSort, sortMatches, getSortIcon } = useMatchSorting(initialSort)
 
   const filteredMatches = useMemo(() => {
-    return matches.filter((match) => {
+    return (matches || []).filter((match) => {
       const teamMatch = filters.team
         ? match.home_team.toLowerCase().includes(filters.team.toLowerCase()) ||
           match.away_team.toLowerCase().includes(filters.team.toLowerCase())
@@ -41,7 +41,7 @@ export function useMatchFiltering(matches: Match[], initialFilters?: MatchFilter
 
   const matchesByRound = useMemo(() => {
     return sortedMatches.reduce((acc, match) => {
-      const round = match.round || "Unknown"
+      const round = String(match.round || "Unknown")
       if (!acc[round]) {
         acc[round] = []
       }
