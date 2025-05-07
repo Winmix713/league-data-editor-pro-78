@@ -13,6 +13,7 @@ import { PredictionsView } from "./PredictionsView"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { Toaster } from "sonner"
 import { NewLeagueModal } from "@/components/NewLeagueModal"
+import { LeagueData } from "@/types"
 
 export default function Index() {
   const { 
@@ -43,6 +44,15 @@ export default function Index() {
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  // Create an adapter function to transform string ID to Partial<LeagueData>
+  const handleCreateLeagueFromId = (leagueId: string) => {
+    const leagueData: Partial<LeagueData> = {
+      id: leagueId,
+      name: `League ${leagueId}` // Default name based on ID
+    };
+    handleCreateLeague(leagueData);
+  };
 
   return (
     <div className="min-h-screen bg-[#101820] text-white">
@@ -108,7 +118,7 @@ export default function Index() {
       <NewLeagueModal
         isOpen={isNewLeagueModalOpen}
         onClose={() => setIsNewLeagueModalOpen(false)}
-        onCreateLeague={handleCreateLeague}
+        onCreateLeague={handleCreateLeagueFromId}
       />
       
       <Toaster />
