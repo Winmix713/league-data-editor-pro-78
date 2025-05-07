@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from "react"
 import { Match } from "@/types"
+import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
 
 export interface SortConfig {
   key: string
@@ -61,10 +62,6 @@ export function useMatchSorting(initialSortConfig?: SortConfig | null) {
   }, [sortConfig])
 
   const getSortIcon = useCallback((key: string) => {
-    const ArrowUpDown = require("lucide-react").ArrowUpDown
-    const ChevronUp = require("lucide-react").ChevronUp
-    const ChevronDown = require("lucide-react").ChevronDown
-
     if (!sortConfig || sortConfig.key !== key) {
       return <ArrowUpDown className="h-4 w-4 ml-1" />
     }
