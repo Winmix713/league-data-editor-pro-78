@@ -7,6 +7,7 @@ interface MatchFilters {
   team?: string
   round?: string
   result?: "home" | "away" | "draw" | ""
+  goals?: "under2" | "2-3" | "over3" | ""
 }
 
 export function useMatchFiltering(matches: Match[] = [], initialFilters?: MatchFilters, initialSort?: SortConfig) {
@@ -31,7 +32,17 @@ export function useMatchFiltering(matches: Match[] = [], initialFilters?: MatchF
         resultMatch = match.home_score === match.away_score
       }
 
-      return teamMatch && roundMatch && resultMatch
+      let goalsMatch = true
+      const totalGoals = match.home_score + match.away_score
+      if (filters.goals === "under2") {
+        goalsMatch = totalGoals < 2
+      } else if (filters.goals === "2-3") {
+        goalsMatch = totalGoals >= 2 && totalGoals <= 3
+      } else if (filters.goals === "over3") {
+        goalsMatch = totalGoals > 3
+      }
+
+      return teamMatch && roundMatch && resultMatch && goalsMatch
     })
   }, [matches, filters])
 
