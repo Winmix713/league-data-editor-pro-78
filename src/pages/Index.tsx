@@ -32,8 +32,6 @@ export default function Index() {
     goBack
   } = useLeagueState();
   
-  const { toast } = useToast();
-  
   // Find the currently selected league
   const selectedLeague = selectedLeagueId 
     ? leaguesList.find(league => league.id === selectedLeagueId) 
