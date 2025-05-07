@@ -5,10 +5,10 @@ import { Plus } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
+import { Button } from "./ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
+import { Input } from "./ui/input"
 
 const formSchema = z.object({
   leagueId: z

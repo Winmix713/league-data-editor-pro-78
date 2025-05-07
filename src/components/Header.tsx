@@ -1,6 +1,6 @@
 import { memo } from "react"
 import { Trophy, BarChart3, ChevronDown, Settings, Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 
 interface HeaderProps {
   currentSeason?: string
