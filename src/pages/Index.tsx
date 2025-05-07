@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/Header"
 import { LeagueDetails } from "@/components/LeagueDetails"
 import { useLeagueState } from "@/hooks/league"
@@ -18,15 +19,25 @@ export default function Index() {
     currentRoute, 
     selectedLeagueId, 
     leaguesList,
+    currentMatches,
     isNewLeagueModalOpen,
     setIsNewLeagueModalOpen,
     handleLeagueAction,
     handleCreateLeague,
+    handleUpdateLeague,
+    handleUpdateMatches,
     searchTerm,
-    setSearchTerm
+    setSearchTerm,
+    navigate,
+    goBack
   } = useLeagueState();
   
   const { toast } = useToast();
+  
+  // Find the currently selected league
+  const selectedLeague = selectedLeagueId 
+    ? leaguesList.find(league => league.id === selectedLeagueId) 
+    : null;
 
   // Filter leagues based on search term
   const filteredLeagues = leaguesList.filter((league) =>
@@ -58,8 +69,14 @@ export default function Index() {
                   onNewLeague={() => setIsNewLeagueModalOpen(true)}
                 />
               )}
-              {currentRoute === "league-details" && selectedLeagueId && (
-                <LeagueDetails />
+              {currentRoute === "league-details" && selectedLeagueId && selectedLeague && (
+                <LeagueDetails 
+                  league={selectedLeague}
+                  matches={currentMatches}
+                  onBack={goBack}
+                  onUpdateLeague={handleUpdateLeague}
+                  onUpdateMatches={handleUpdateMatches}
+                />
               )}
               {currentRoute === "analysis" && (
                 <AnalysisView />
