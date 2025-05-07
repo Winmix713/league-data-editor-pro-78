@@ -2,7 +2,7 @@
 import { Home, BarChart3, PieChart, Settings, Trophy, Calendar, Grid3X3, LayoutGrid } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useLeagueState } from "@/hooks/useLeagueState"
+import { useLeagueState } from "@/hooks/league"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 

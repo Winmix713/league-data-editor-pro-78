@@ -1,7 +1,6 @@
-
 import { Header } from "@/components/Header"
 import { LeagueDetails } from "@/components/LeagueDetails"
-import { useLeagueState } from "@/hooks/useLeagueState"
+import { useLeagueState } from "@/hooks/league"
 import { AnalysisView } from "./AnalysisView"
 import { AdvancedPatternView } from "./AdvancedPatternView"
 import { IntegrationsView } from "./IntegrationsView"
