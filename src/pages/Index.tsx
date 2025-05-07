@@ -1,131 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { toast } from 'sonner';
-import { Header } from "@/components/Header";
-import LeagueSeasons from "@/components/LeagueSeasons";
-import LeagueEditor from "@/components/LeagueEditor";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import IntegrationCards from "@/components/dashboard/IntegrationCards";
-import ContentTabs from "@/components/dashboard/ContentTabs";
-import MatchSchedule from "@/components/MatchSchedule";
-import { LeagueDetails } from "@/components/LeagueDetails";
-import MatchDetail from "@/components/MatchDetail";
-import MobileSidebar from "@/components/layout/MobileSidebar";
-import ExportData from "@/components/export/ExportData";
-import LeagueStatsDashboard from "@/components/dashboard/LeagueStatsDashboard";
-import { useIsMobile } from "@/hooks/use-mobile";
-import type { LeagueData, Match } from "@/types";
+
+import React, { useEffect } from 'react'
+import { Header } from "@/components/Header"
+import { LeagueDetails } from "@/components/LeagueDetails"
+import MatchDetail from "@/components/MatchDetail"
+import MobileSidebar from "@/components/layout/MobileSidebar"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useLeagueState } from '@/hooks/useLeagueState'
+import { LeagueListView } from './league/LeagueListView'
+import { LeagueStatsView } from './league/LeagueStatsView'
+import { LeagueEditorView } from './league/LeagueEditorView'
 
 const Matches = () => {
-  const [activeTab, setActiveTab] = useState("league-list");
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [dataUpdatedAt, setDataUpdatedAt] = useState(new Date());
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentRoute, setCurrentRoute] = useState('/');
-  const isMobile = useIsMobile();
+  const {
+    activeTab,
+    setActiveTab,
+    isEditing, 
+    setIsEditing,
+    selectedLeague,
+    matches,
+    dataUpdatedAt,
+    isRefreshing,
+    isLoading,
+    setIsLoading,
+    currentRoute,
+    isMatchDetailOpen,
+    selectedMatch,
+    setIsMatchDetailOpen,
+    handleRefreshData,
+    handleLeagueUpdate,
+    handleMatchesUpdate,
+    handleNavigate,
+    handleSelectLeague,
+    handleBackToList,
+    handleBackFromEditor,
+    handleOpenMatchDetail
+  } = useLeagueState()
 
-  // State for MatchDetail dialog
-  const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const isMobile = useIsMobile()
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleRefreshData = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      const now = new Date();
-      setDataUpdatedAt(now);
-      toast.success("Data refreshed successfully", {
-        description: `All data has been updated as of ${now.toLocaleTimeString()}`
-      });
-    }, 2000);
-  };
-
-  const handleLeagueUpdate = (updatedLeague: LeagueData) => {
-    setSelectedLeague(updatedLeague);
-    toast("League details updated.");
-  };
-
-  const handleMatchesUpdate = (updatedMatches: Match[]) => {
-    setMatches(updatedMatches);
-    toast("Matches updated.");
-  };
-
-  const handleNavigate = (route: string) => {
-    setCurrentRoute(route);
-    // Handle navigation based on routes
-    if (route === '/') {
-      setActiveTab('league-list');
-    } else if (route === '/leagues') {
-      setActiveTab('league-list');
-    } else if (route === '/statistics' && selectedLeague) {
-      setActiveTab('statistics');
-    }
-  };
-
-  const seasonSelector = (
-    <div className="relative flex items-center">
-      <Button variant="outline" className="bg-black/20 border-white/10 text-white flex items-center gap-2">
-        <span>2023-2024 Szezon</span>
-        <ChevronDown className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-
-  const handleSelectLeague = (league: LeagueData, leagueMatches: Match[]) => {
-    setSelectedLeague(league);
-    setMatches(leagueMatches);
-    setActiveTab("league-details");
-    setIsLoading(false);
-  };
-
-  const handleBackToList = () => {
-    setActiveTab("league-list");
-  };
-
-  const handleBackFromEditor = () => {
-    setIsEditing(false);
-    setActiveTab("league-list");
-  };
-
-  const handleOpenMatchDetail = (match: Match) => {
-    setSelectedMatch(match);
-    setIsMatchDetailOpen(true);
-  };
+    const timer = setTimeout(() => setIsLoading(false), 1500)
+    return () => clearTimeout(timer)
+  }, [setIsLoading])
 
   const renderContent = () => {
     if (isEditing) {
-      return <LeagueEditor onBack={handleBackFromEditor} />;
+      return <LeagueEditorView onBack={handleBackFromEditor} />
     }
     
     if (activeTab === "league-list") {
       return (
-        <>
-          <DashboardHeader
-            title="V-SPORTS ELEMZŐ RENDSZER"
-            subtitle="Professzionális Elemzés és Predikció"
-            dataUpdatedAt={dataUpdatedAt}
-            isRefreshing={isRefreshing}
-            onRefresh={handleRefreshData}
-            actionButton={seasonSelector}
-          />
-
-          <IntegrationCards />
-          
-          <LeagueSeasons
-            onEdit={() => setIsEditing(true)}
-            onSelect={handleSelectLeague}
-          />
-        </>
-      );
+        <LeagueListView
+          dataUpdatedAt={dataUpdatedAt}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefreshData}
+          onEdit={() => setIsEditing(true)}
+          onSelectLeague={handleSelectLeague}
+        />
+      )
     }
 
     if (activeTab === "league-details" && selectedLeague) {
@@ -137,57 +69,21 @@ const Matches = () => {
           onUpdateLeague={handleLeagueUpdate}
           onUpdateMatches={handleMatchesUpdate}
         />
-      );
+      )
     }
 
     if (["matches", "standings", "form", "statistics"].includes(activeTab) && selectedLeague) {
       return (
-        <>
-          <Button onClick={() => setActiveTab('league-details')} variant="outline" className="self-start mb-6">
-            ← Back to League Details
-          </Button>
-
-          <ContentTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            isLoading={isLoading}
-          />
-
-          {activeTab === "matches" && (
-            <MatchSchedule
-              matches={matches}
-              league={selectedLeague}
-              isLoading={isLoading}
-              onMatchClick={handleOpenMatchDetail}
-            />
-          )}
-          
-          {activeTab === "statistics" && selectedLeague && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2">
-                {/* Import the statistics dashboard component here */}
-                <div className="bg-black/20 rounded-xl border border-white/5 p-6">
-                  {isMobile ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400">
-                        For the best experience, please view statistics on a larger screen.
-                        <Button onClick={() => setActiveTab('league-details')} variant="link" className="px-1">
-                          Go back
-                        </Button>
-                      </p>
-                    </div>
-                  ) : (
-                    selectedLeague && <LeagueStatsDashboard league={selectedLeague} matches={matches} />
-                  )}
-                </div>
-              </div>
-              <div className="xl:col-span-1">
-                <ExportData league={selectedLeague} matches={matches} />
-              </div>
-            </div>
-          )}
-        </>
-      );
+        <LeagueStatsView
+          league={selectedLeague}
+          matches={matches}
+          activeTab={activeTab}
+          isLoading={isLoading}
+          onTabChange={setActiveTab}
+          onBackToLeagueDetails={() => setActiveTab('league-details')}
+          onMatchClick={handleOpenMatchDetail}
+        />
+      )
     }
 
     if (["matches", "standings", "form"].includes(activeTab) && !selectedLeague) {
@@ -196,11 +92,11 @@ const Matches = () => {
           Please select a league from the 'League List' tab first.
           <Button onClick={() => setActiveTab('league-list')} variant="link">Go to League List</Button>
         </div>
-      );
+      )
     }
 
-    return null;
-  };
+    return null
+  }
 
   return (
     <div className="min-h-screen pt-16 pb-16 bg-background">
@@ -225,7 +121,10 @@ const Matches = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Matches;
+export default Matches
+
+// Fix missing import
+import { Button } from "@/components/ui/button"
