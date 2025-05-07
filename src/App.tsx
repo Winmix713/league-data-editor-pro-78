@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
@@ -190,7 +189,6 @@ export default function App() {
         onCreateLeague={handleCreateLeague}
       />
       
-      {/* Add the Toaster component for toast notifications */}
       <Toaster />
     </div>
   )

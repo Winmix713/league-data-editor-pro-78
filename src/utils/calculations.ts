@@ -31,6 +31,7 @@ export interface TeamForm {
   played: number
   goalsFor: number
   goalsAgainst: number
+  goalDifference: number
   points: number
   form: Array<"W" | "D" | "L">
 }
@@ -155,7 +156,7 @@ export class LeagueStatsCalculator {
       played: stats.played,
       goalsFor: stats.goalsFor,
       goalsAgainst: stats.goalsAgainst,
-      goalDifference: stats.goalDifference, // Added this missing property
+      goalDifference: stats.goalDifference,
       points: stats.points,
       form: [...stats.form],
     }))
@@ -167,6 +168,7 @@ export class LeagueStatsCalculator {
       played: form.played,
       goalsFor: form.goalsFor,
       goalsAgainst: form.goalsAgainst,
+      goalDifference: form.goalDifference,
       points: form.points,
       form: form.form,
     }))

@@ -59,8 +59,8 @@ export const LeagueEditForm = ({
         header: true,
         skipEmptyLines: true,
         transformHeader: (header) => {
-          // Trim any whitespace that might be in the header
-          return header.trim();
+          // Trim any whitespace and remove quotes that might be in the header
+          return header.trim().replace(/^"(.*)"$/, '$1');
         },
         complete: (result) => {
           try {
@@ -104,7 +104,10 @@ export const LeagueEditForm = ({
               })
               .map((rawMatch: any, index: number) => {
                 // Format the date - if it's only a time, add today's date
-                let dateValue = rawMatch.date || ""
+                let dateValue = typeof rawMatch.date === 'string' 
+                  ? rawMatch.date.replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if present
+                  : rawMatch.date || "";
+                
                 if (dateValue && dateValue.match(/^\d{2}:\d{2}$/)) {
                   // It's just a time, let's add a synthetic date using the round number
                   // Each 8 matches creates a new round, starting from today
@@ -119,15 +122,34 @@ export const LeagueEditForm = ({
                 // Calculate round number (1-based, every 8 matches is a new round)
                 const roundNumber = Math.floor(index / 8) + 1
                 
+                // Clean data and ensure proper types
+                const homeTeam = typeof rawMatch.home_team === 'string' 
+                  ? rawMatch.home_team.replace(/^"(.*)"$/, '$1') 
+                  : rawMatch.home_team || "";
+                
+                const awayTeam = typeof rawMatch.away_team === 'string'
+                  ? rawMatch.away_team.replace(/^"(.*)"$/, '$1')
+                  : rawMatch.away_team || "";
+                
+                // Extract numeric scores, removing quotes if present
+                const extractScore = (value: any): number => {
+                  if (typeof value === 'number') return value;
+                  if (typeof value === 'string') {
+                    const cleanValue = value.replace(/^"(.*)"$/, '$1');
+                    return parseInt(cleanValue, 10) || 0;
+                  }
+                  return 0;
+                };
+
                 // Map to our Match format
                 return {
                   date: dateValue,
-                  home_team: rawMatch.home_team || "",
-                  away_team: rawMatch.away_team || "",
-                  ht_home_score: Number(rawMatch.ht_home_score || 0),
-                  ht_away_score: Number(rawMatch.ht_away_score || 0),
-                  home_score: Number(rawMatch.home_score || 0),
-                  away_score: Number(rawMatch.away_score || 0),
+                  home_team: homeTeam,
+                  away_team: awayTeam,
+                  ht_home_score: extractScore(rawMatch.ht_home_score),
+                  ht_away_score: extractScore(rawMatch.ht_away_score),
+                  home_score: extractScore(rawMatch.home_score),
+                  away_score: extractScore(rawMatch.away_score),
                   round: `Round ${roundNumber}`,
                 }
               })

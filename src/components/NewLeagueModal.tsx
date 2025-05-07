@@ -25,7 +25,7 @@ type FormValues = z.infer<typeof formSchema>
 interface NewLeagueModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreateLeague: (leagueId: string) => void // Changed from Promise<void> to void
+  onCreateLeague: (leagueId: string) => void
 }
 
 export function NewLeagueModal({ isOpen, onClose, onCreateLeague }: NewLeagueModalProps) {
