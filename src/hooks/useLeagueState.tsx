@@ -187,32 +187,30 @@ export const LeagueStateProvider = ({ children }: LeagueStateProviderProps) => {
   }, [])
 
   return (
-    <LeagueStateContext.Provider
-      value={{
-        // Navigation state
-        currentRoute,
-        selectedLeagueId,
-        selectedMatchId,
-        
-        // Data state
-        leaguesList,
-        currentMatches,
-        searchTerm,
-        isNewLeagueModalOpen,
-        
-        // Navigation actions
-        navigate,
-        goBack,
-        
-        // Data actions
-        handleLeagueAction,
-        handleCreateLeague,
-        handleUpdateLeague,
-        handleUpdateMatches,
-        setSearchTerm,
-        setIsNewLeagueModalOpen,
-      }}
-    >
+    <LeagueStateContext.Provider value={{
+      // Navigation state
+      currentRoute,
+      selectedLeagueId,
+      selectedMatchId,
+      
+      // Data state
+      leaguesList,
+      currentMatches,
+      searchTerm,
+      isNewLeagueModalOpen,
+      
+      // Navigation actions
+      navigate,
+      goBack,
+      
+      // Data actions
+      handleLeagueAction,
+      handleCreateLeague,
+      handleUpdateLeague,
+      handleUpdateMatches,
+      setSearchTerm,
+      setIsNewLeagueModalOpen,
+    }}>
       {children}
     </LeagueStateContext.Provider>
   )
