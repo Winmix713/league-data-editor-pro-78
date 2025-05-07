@@ -1,21 +1,32 @@
 
-// Define the types of routes available in the application
+import type { LeagueData, Match } from "@/types"
+
 export type RouteType = 
   | "leagues" 
   | "league-details" 
   | "analysis" 
   | "advanced-pattern" 
-  | "integrations" 
+  | "integrations"
   | "league-analytics" 
   | "league-management" 
   | "matches"
+  | "settings"
 
-// Interface for the LeagueState context
+export interface RouteHistoryItem {
+  route: RouteType
+  leagueId?: string
+  matchId?: string
+}
+
 export interface LeagueState {
   // Navigation state
   currentRoute: RouteType
   selectedLeagueId: string | null
   selectedMatchId: string | null
+  
+  // Navigation actions
+  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string }) => void
+  goBack: () => void
   
   // Data state
   leaguesList: LeagueData[]
@@ -23,25 +34,11 @@ export interface LeagueState {
   searchTerm: string
   isNewLeagueModalOpen: boolean
   
-  // Navigation actions
-  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string }) => void
-  goBack: () => void
-  
   // Data actions
   handleLeagueAction: (leagueId: string, action: "view" | "edit" | "complete" | "delete") => void
-  handleCreateLeague: (leagueId: string) => void
+  handleCreateLeague: (leagueData: Partial<LeagueData>) => void
   handleUpdateLeague: (updatedLeague: LeagueData) => void
-  handleUpdateMatches: (updatedMatches: Match[]) => void
+  handleUpdateMatches: (matches: Match[]) => void
   setSearchTerm: (term: string) => void
   setIsNewLeagueModalOpen: (isOpen: boolean) => void
 }
-
-// Type for route history
-export interface RouteHistoryItem {
-  route: RouteType
-  leagueId?: string
-  matchId?: string
-}
-
-// Import existing types
-import { LeagueData, Match } from "@/types"

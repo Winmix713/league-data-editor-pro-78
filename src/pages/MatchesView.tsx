@@ -1,134 +1,143 @@
 
-import { useState } from "react"
-import { MatchesTable } from "@/components/matches/MatchesTable"
+import { memo, useState } from "react"
+import { useLeagueState } from "@/hooks/league"
+import { MatchesTable } from "@/components/MatchesTable"
 import { Button } from "@/components/ui/button"
-import { Calendar, FileSpreadsheet, Plus } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Search, Filter, CalendarDays, RefreshCw } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import MatchDetail from "@/components/MatchDetail"
+import type { Match } from "@/types"
 
-export function MatchesView() {
-  const [leagueFilter, setLeagueFilter] = useState<string>("all")
-  const [seasonFilter, setSeasonFilter] = useState<string>("2023-2024")
-  
-  // Placeholder data
-  const matches = []
-  
+export const MatchesView = memo(() => {
+  const { currentMatches } = useLeagueState()
+  const [activeTab, setActiveTab] = useState("all")
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+  const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false)
+
+  const handleRefresh = () => {
+    setIsLoading(true)
+    // Simulate data loading
+    setTimeout(() => {
+      setIsLoading(false)
+    }, 800)
+  }
+
+  const handleMatchClick = (match: Match) => {
+    setSelectedMatch(match)
+    setIsMatchDetailOpen(true)
+  }
+
+  const handleCloseMatchDetail = () => {
+    setIsMatchDetailOpen(false)
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Matches</h2>
-          <p className="text-gray-400">View and manage match data</p>
-        </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Button 
-            variant="outline"
-            className="w-full sm:w-auto bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2"
-          >
-            <Calendar className="h-4 w-4" />
-            <span>Calendar</span>
-          </Button>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Match Center</h2>
+        <div className="flex gap-2">
+          <Select defaultValue="2023-2024">
+            <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
+              <SelectValue placeholder="Select season" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#0a0f14] border-white/10 text-white">
+              <SelectItem value="2023-2024">Season 2023-2024</SelectItem>
+              <SelectItem value="2022-2023">Season 2022-2023</SelectItem>
+              <SelectItem value="2021-2022">Season 2021-2022</SelectItem>
+            </SelectContent>
+          </Select>
           <Button 
             variant="outline" 
-            className="w-full sm:w-auto bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2"
+            size="icon"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+            onClick={handleRefresh}
+            disabled={isLoading}
           >
-            <FileSpreadsheet className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
-          <Button className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white gap-2">
-            <Plus className="h-4 w-4" />
-            <span>Add Match</span>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
-      
-      <div className="flex flex-col md:flex-row gap-4 items-start">
-        <div className="w-full md:w-64 space-y-4">
-          <Card className="bg-black/20 border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white text-sm">Filter Matches</CardTitle>
-              <CardDescription>Select league and season</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">League</label>
-                <Select 
-                  value={leagueFilter} 
-                  onValueChange={setLeagueFilter}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-black/20 border-white/5 col-span-1 md:col-span-3">
+          <CardHeader className="pb-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-blue-500" />
+                Matches Overview
+              </CardTitle>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search matches..."
+                    className="w-full sm:w-60 bg-black/30 text-white border border-white/10 rounded-lg pl-10 pr-4 py-2
+                              focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent
+                              transition-all duration-200 placeholder:text-gray-500"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  className="bg-white/5 border-white/10 text-white hover:bg-white/10 flex items-center gap-2"
                 >
-                  <SelectTrigger className="bg-black/30 border-white/10 text-white">
-                    <SelectValue placeholder="Select league" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Leagues</SelectItem>
-                    <SelectItem value="premier-league">Premier League</SelectItem>
-                    <SelectItem value="la-liga">La Liga</SelectItem>
-                    <SelectItem value="bundesliga">Bundesliga</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Filter className="h-4 w-4" />
+                  <span>Filter</span>
+                </Button>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Season</label>
-                <Select 
-                  value={seasonFilter} 
-                  onValueChange={setSeasonFilter}
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-3 bg-black/20 w-full rounded-xl mb-6">
+                <TabsTrigger
+                  value="all"
+                  className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
                 >
-                  <SelectTrigger className="bg-black/30 border-white/10 text-white">
-                    <SelectValue placeholder="Select season" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2023-2024">2023-2024</SelectItem>
-                    <SelectItem value="2022-2023">2022-2023</SelectItem>
-                    <SelectItem value="2021-2022">2021-2022</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  All Matches
+                </TabsTrigger>
+                <TabsTrigger
+                  value="upcoming"
+                  className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
+                >
+                  Upcoming
+                </TabsTrigger>
+                <TabsTrigger
+                  value="completed"
+                  className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
+                >
+                  Completed
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                <MatchesTable matches={currentMatches} />
+              </TabsContent>
               
-              <Button variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
-                Apply Filters
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-black/20 border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white text-sm">Match Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Matches</span>
-                <span className="text-white font-medium">248</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Home Wins</span>
-                <span className="text-white font-medium">124</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Away Wins</span>
-                <span className="text-white font-medium">76</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Draws</span>
-                <span className="text-white font-medium">48</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Goals Scored</span>
-                <span className="text-white font-medium">683</span>
-              </div>
-              <div className="h-px bg-white/5 my-2"></div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Goals per Match</span>
-                <span className="text-white font-medium">2.75</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="flex-1">
-          <MatchesTable matches={matches} />
-        </div>
+              <TabsContent value="upcoming">
+                <MatchesTable matches={currentMatches.filter(m => new Date(m.date) > new Date())} />
+              </TabsContent>
+              
+              <TabsContent value="completed">
+                <MatchesTable matches={currentMatches.filter(m => new Date(m.date) <= new Date())} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
+
+      {selectedMatch && (
+        <MatchDetail
+          match={selectedMatch}
+          isOpen={isMatchDetailOpen}
+          onClose={handleCloseMatchDetail}
+        />
+      )}
     </div>
   )
-}
+})
+
+MatchesView.displayName = "MatchesView"

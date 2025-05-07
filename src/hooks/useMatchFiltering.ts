@@ -1,130 +1,63 @@
 
-import { useState, useMemo, useCallback } from 'react'
-import type { Match } from '@/types'
+import { useState, useCallback, useMemo } from "react"
+import type { Match } from "@/types"
+import { useMatchSorting, SortConfig } from "@/components/matches/useMatchSorting"
 
-interface SortConfig {
-  key: string
-  direction: 'asc' | 'desc'
+interface MatchFilters {
+  team?: string
+  round?: string
+  result?: "home" | "away" | "draw" | ""
 }
 
-interface Filters {
-  searchTerm?: string
-  homeTeam?: string
-  awayTeam?: string
-  fromDate?: Date
-  toDate?: Date
-  result?: 'home' | 'away' | 'draw'
-}
+export function useMatchFiltering(matches: Match[], initialFilters?: MatchFilters, initialSort?: SortConfig) {
+  const [filters, setFilters] = useState<MatchFilters>(initialFilters || {})
+  const { sortConfig, requestSort, sortMatches, getSortIcon } = useMatchSorting(initialSort)
 
-export function useMatchFiltering(matches: Match[]) {
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null)
-  const [filters, setFilters] = useState<Filters>({})
-
-  // Handle sorting
-  const requestSort = useCallback((key: string) => {
-    setSortConfig((currentSortConfig) => {
-      if (currentSortConfig && currentSortConfig.key === key) {
-        return {
-          key,
-          direction: currentSortConfig.direction === 'asc' ? 'desc' : 'asc'
-        }
-      }
-      return { key, direction: 'asc' }
-    })
-  }, [])
-
-  // Filter matches
   const filteredMatches = useMemo(() => {
-    if (!matches) return []
-    
-    return matches.filter(match => {
-      // Search term filter
-      if (filters.searchTerm) {
-        const searchTerm = filters.searchTerm.toLowerCase()
-        const matchesSearch = (
-          match.home_team.toLowerCase().includes(searchTerm) ||
-          match.away_team.toLowerCase().includes(searchTerm) ||
-          `${match.home_score}-${match.away_score}`.includes(searchTerm) ||
-          (match.date && match.date.toLowerCase().includes(searchTerm))
-        )
-        if (!matchesSearch) return false
+    return matches.filter((match) => {
+      const teamMatch = filters.team
+        ? match.home_team.toLowerCase().includes(filters.team.toLowerCase()) ||
+          match.away_team.toLowerCase().includes(filters.team.toLowerCase())
+        : true
+
+      const roundMatch = filters.round ? match.round === filters.round : true
+
+      let resultMatch = true
+      if (filters.result === "home") {
+        resultMatch = match.home_score > match.away_score
+      } else if (filters.result === "away") {
+        resultMatch = match.home_score < match.away_score
+      } else if (filters.result === "draw") {
+        resultMatch = match.home_score === match.away_score
       }
-      
-      // Home team filter
-      if (filters.homeTeam && !match.home_team.toLowerCase().includes(filters.homeTeam.toLowerCase())) {
-        return false
-      }
-      
-      // Away team filter
-      if (filters.awayTeam && !match.away_team.toLowerCase().includes(filters.awayTeam.toLowerCase())) {
-        return false
-      }
-      
-      // Result filter
-      if (filters.result) {
-        const homeScore = match.home_score
-        const awayScore = match.away_score
-        
-        if (filters.result === 'home' && homeScore <= awayScore) return false
-        if (filters.result === 'away' && homeScore >= awayScore) return false
-        if (filters.result === 'draw' && homeScore !== awayScore) return false
-      }
-      
-      return true
+
+      return teamMatch && roundMatch && resultMatch
     })
   }, [matches, filters])
-  
-  // Sort filtered matches
+
   const sortedMatches = useMemo(() => {
-    if (!filteredMatches) return []
-    
-    const sortableMatches = [...filteredMatches]
-    
-    if (sortConfig !== null) {
-      sortableMatches.sort((a, b) => {
-        let aValue = a[sortConfig.key as keyof Match] as string | number
-        let bValue = b[sortConfig.key as keyof Match] as string | number
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          aValue = aValue.toLowerCase()
-          bValue = bValue.toLowerCase()
-        }
-        
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1
-        }
-        return 0
-      })
-    }
-    
-    return sortableMatches
-  }, [filteredMatches, sortConfig])
-  
-  // Group matches by round
+    return sortMatches(filteredMatches)
+  }, [filteredMatches, sortMatches])
+
   const matchesByRound = useMemo(() => {
-    const result: Record<number, Match[]> = {}
-    
-    if (sortedMatches) {
-      sortedMatches.forEach((match) => {
-        const roundNumber = match.round ? Number(match.round) : 0
-        if (!result[roundNumber]) {
-          result[roundNumber] = []
-        }
-        result[roundNumber].push(match)
-      })
-    }
-    
-    return result
+    return sortedMatches.reduce((acc, match) => {
+      const round = match.round || "Unknown"
+      if (!acc[round]) {
+        acc[round] = []
+      }
+      acc[round].push(match)
+      return acc
+    }, {} as Record<string, Match[]>)
   }, [sortedMatches])
-  
+
   return {
+    filters,
+    setFilters,
+    filteredMatches,
     sortedMatches,
     matchesByRound,
-    sortConfig,
     requestSort,
-    setFilters
+    sortConfig,
+    getSortIcon
   }
 }

@@ -2,6 +2,7 @@
 import { memo } from "react"
 import { Match } from "@/types"
 import { MatchCard } from "./MatchCard"
+import { NoMatchesFound } from "./NoMatchesFound"
 
 interface CardsViewProps {
   matches: Match[]
@@ -9,11 +10,7 @@ interface CardsViewProps {
 
 export const CardsView = memo(({ matches }: CardsViewProps) => {
   if (matches.length === 0) {
-    return (
-      <div className="col-span-full text-center py-8 text-gray-400">
-        No matches found with the current filters.
-      </div>
-    )
+    return <NoMatchesFound />
   }
 
   return (

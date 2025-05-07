@@ -1,111 +1,125 @@
 
-import { Camera, Database, Globe, LineChart, Lock, Mail, Video, Youtube } from "lucide-react"
+import { memo } from "react"
+import { Database, Link2, PieChart, Webhook } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-
-export function IntegrationsView() {
-  return (
-    <div className="space-y-6 animate-fadeIn">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Integrations</h2>
-        <p className="text-gray-400">Connect external services and data sources</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <IntegrationCard
-          title="CSV Data Import"
-          description="Import match data from CSV files"
-          icon={<Database className="h-6 w-6" />}
-          status="connected"
-        />
-        <IntegrationCard
-          title="Video Analysis"
-          description="Connect video footage for play pattern recognition"
-          icon={<Video className="h-6 w-6" />}
-        />
-        <IntegrationCard
-          title="Stats API"
-          description="Live football statistics and data feed"
-          icon={<LineChart className="h-6 w-6" />}
-          status="beta"
-        />
-        <IntegrationCard
-          title="Camera Feed"
-          description="Real-time in-stadium camera feeds"
-          icon={<Camera className="h-6 w-6" />}
-        />
-        <IntegrationCard
-          title="Email Notifications"
-          description="Send automated reports and alerts"
-          icon={<Mail className="h-6 w-6" />}
-          status="maintenance"
-        />
-        <IntegrationCard
-          title="YouTube Highlights"
-          description="Automatically fetch match highlights"
-          icon={<Youtube className="h-6 w-6" />}
-        />
-        <IntegrationCard
-          title="Authentication"
-          description="Connect team member accounts and roles"
-          icon={<Lock className="h-6 w-6" />}
-        />
-        <IntegrationCard
-          title="Web Scraper"
-          description="Fetch data from league websites"
-          icon={<Globe className="h-6 w-6" />}
-          status="coming"
-        />
-      </div>
-    </div>
-  )
-}
 
 interface IntegrationCardProps {
   title: string
   description: string
   icon: React.ReactNode
-  status?: "connected" | "beta" | "maintenance" | "coming"
+  status: "connected" | "not-connected"
+  buttonText: string
+  onClick: () => void
 }
 
-function IntegrationCard({ title, description, icon, status }: IntegrationCardProps) {
-  const statusBadge = () => {
-    switch (status) {
-      case "connected":
-        return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Connected</Badge>
-      case "beta":
-        return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Beta</Badge>
-      case "maintenance":
-        return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Maintenance</Badge>
-      case "coming":
-        return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Coming Soon</Badge>
-      default:
-        return null
-    }
-  }
-  
-  return (
-    <Card className="bg-black/20 border-white/5 hover:bg-black/30 transition-colors">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="p-2 rounded-lg bg-black/30 text-blue-400">
-            {icon}
-          </div>
-          {statusBadge()}
+const IntegrationCard = ({
+  title,
+  description,
+  icon,
+  status,
+  buttonText,
+  onClick
+}: IntegrationCardProps) => (
+  <Card className="bg-black/20 border-white/5 hover:border-blue-500/50 transition-all">
+    <CardHeader>
+      <div className="flex items-center justify-between">
+        <div className="p-2 bg-blue-500/20 rounded-lg">
+          {icon}
         </div>
-        <CardTitle className="text-white mt-4">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <Button 
-          variant="outline" 
-          className="w-full gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
-          disabled={status === "coming" || status === "maintenance"}
-        >
-          {status === "connected" ? "Configure" : "Connect"}
-        </Button>
-      </CardFooter>
-    </Card>
+        <div className={`px-2 py-1 text-xs font-medium rounded-full ${
+          status === "connected" 
+            ? "bg-emerald-500/20 text-emerald-400" 
+            : "bg-amber-500/20 text-amber-400"
+        }`}>
+          {status === "connected" ? "Connected" : "Not Connected"}
+        </div>
+      </div>
+      <CardTitle className="text-white">{title}</CardTitle>
+      <CardDescription className="text-gray-400">{description}</CardDescription>
+    </CardHeader>
+    <CardContent className="text-sm text-gray-500">
+      {status === "connected" 
+        ? "Integration is active and syncing data automatically."
+        : "Connect to enable automatic data synchronization."}
+    </CardContent>
+    <CardFooter>
+      <Button 
+        onClick={onClick}
+        className="w-full gap-2"
+        variant={status === "connected" ? "outline" : "default"}
+      >
+        {buttonText}
+      </Button>
+    </CardFooter>
+  </Card>
+)
+
+export const IntegrationsView = memo(() => {
+  const handleIntegrationClick = () => {
+    // Integration setup logic would go here
+  }
+
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      <h2 className="text-2xl font-bold text-white">Integrations</h2>
+      <p className="text-gray-400 max-w-3xl">
+        Connect V-SPORTS with external services to enhance data collection and analysis.
+        Integrations enable automatic data syncing and extended functionality.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        <IntegrationCard
+          title="Analytics Integration"
+          description="Connect to external analytics platforms for enhanced insights."
+          icon={<PieChart className="h-5 w-5 text-blue-400" />}
+          status="not-connected"
+          buttonText="Connect Analytics"
+          onClick={handleIntegrationClick}
+        />
+        <IntegrationCard
+          title="Database Connection"
+          description="Link to your existing database for seamless data management."
+          icon={<Database className="h-5 w-5 text-blue-400" />}
+          status="connected"
+          buttonText="Manage Connection"
+          onClick={handleIntegrationClick}
+        />
+        <IntegrationCard
+          title="API Services"
+          description="Connect to external API services for extended functionality."
+          icon={<Link2 className="h-5 w-5 text-blue-400" />}
+          status="not-connected"
+          buttonText="Set up API"
+          onClick={handleIntegrationClick}
+        />
+        <IntegrationCard
+          title="Webhook Integration"
+          description="Set up webhooks for real-time data updates and automation."
+          icon={<Webhook className="h-5 w-5 text-blue-400" />}
+          status="not-connected"
+          buttonText="Configure Webhooks"
+          onClick={handleIntegrationClick}
+        />
+      </div>
+
+      <div className="mt-12 p-6 bg-black/20 rounded-xl border border-white/10">
+        <h3 className="text-lg font-medium mb-4">Integration Documentation</h3>
+        <p className="text-gray-400 mb-6">
+          Learn how to set up and configure each integration type with our comprehensive guides.
+          Our API documentation provides all the necessary details for custom integrations.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+            View API Docs
+          </Button>
+          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+            Integration Tutorials
+          </Button>
+        </div>
+      </div>
+    </div>
   )
-}
+})
+
+IntegrationsView.displayName = "IntegrationsView"
