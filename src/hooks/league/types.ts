@@ -45,7 +45,7 @@ export interface LeagueState {
   handleLeagueAction: (leagueId: string, action: "view" | "edit" | "complete" | "delete") => void
   handleCreateLeague: (leagueData: Partial<LeagueData>) => void
   handleUpdateLeague: (updatedLeague: LeagueData) => void
-  handleUpdateMatches: (matches: Match[]) => void
+  handleUpdateMatches: (matches: Match[], leagueId?: string) => void
   setSearchTerm: (term: string) => void
   setIsNewLeagueModalOpen: (isOpen: boolean) => void
   refreshData: () => void

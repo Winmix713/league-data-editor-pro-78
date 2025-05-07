@@ -1,3 +1,4 @@
+
 export interface LeagueData {
   id: string
   name: string
@@ -17,6 +18,7 @@ export interface Match {
   home_score: number
   away_score: number
   round?: string
+  venue?: string
 }
 
 export interface TeamForm {
