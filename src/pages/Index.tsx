@@ -9,9 +9,9 @@ import { LeagueAnalyticsView } from "./league/LeagueAnalyticsView"
 import { LeagueManagementView } from "./league/LeagueManagementView"
 import { LeagueTable } from "@/components/LeagueTable"
 import { MatchesView } from "./MatchesView"
+import { PredictionsView } from "./PredictionsView"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
-import { useToast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster" 
+import { Toaster } from "sonner"
 import { NewLeagueModal } from "@/components/NewLeagueModal"
 
 export default function Index() {
@@ -93,6 +93,9 @@ export default function Index() {
               )}
               {currentRoute === "matches" && (
                 <MatchesView />
+              )}
+              {currentRoute === "predictions" && (
+                <PredictionsView />
               )}
 
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />

@@ -11,11 +11,15 @@ export type RouteType =
   | "league-management" 
   | "matches"
   | "settings"
+  | "predictions"
+  | "team-management"
+  | "statistics"
 
 export interface RouteHistoryItem {
   route: RouteType
   leagueId?: string
   matchId?: string
+  tab?: string
 }
 
 export interface LeagueState {
@@ -23,16 +27,19 @@ export interface LeagueState {
   currentRoute: RouteType
   selectedLeagueId: string | null
   selectedMatchId: string | null
+  selectedTab: string | null
   
   // Navigation actions
-  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string }) => void
+  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string; tab?: string }) => void
   goBack: () => void
+  resetNavigation: () => void
   
   // Data state
   leaguesList: LeagueData[]
   currentMatches: Match[]
   searchTerm: string
   isNewLeagueModalOpen: boolean
+  isLoading: boolean
   
   // Data actions
   handleLeagueAction: (leagueId: string, action: "view" | "edit" | "complete" | "delete") => void
@@ -41,4 +48,5 @@ export interface LeagueState {
   handleUpdateMatches: (matches: Match[]) => void
   setSearchTerm: (term: string) => void
   setIsNewLeagueModalOpen: (isOpen: boolean) => void
+  refreshData: () => void
 }

@@ -2,22 +2,33 @@
 import { useState, useCallback } from "react"
 import { RouteType, RouteHistoryItem } from "./types"
 
+interface NavigateParams {
+  leagueId?: string
+  matchId?: string
+  tab?: string
+}
+
 export const useNavigation = () => {
   // Navigation state
   const [currentRoute, setCurrentRoute] = useState<RouteType>("leagues")
   const [routeHistory, setRouteHistory] = useState<RouteHistoryItem[]>([])
   const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null)
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
+  const [selectedTab, setSelectedTab] = useState<string | null>(null)
   
   // Navigation actions
   const navigate = useCallback(
-    (route: RouteType, params?: { leagueId?: string; matchId?: string }) => {
+    (route: RouteType, params?: NavigateParams) => {
       // Add current route to history before changing
-      setRouteHistory((prev) => [...prev, { 
-        route: currentRoute, 
-        leagueId: selectedLeagueId || undefined, 
-        matchId: selectedMatchId || undefined 
-      }])
+      setRouteHistory((prev) => [
+        ...prev, 
+        { 
+          route: currentRoute, 
+          leagueId: selectedLeagueId || undefined, 
+          matchId: selectedMatchId || undefined,
+          tab: selectedTab || undefined
+        }
+      ])
       
       setCurrentRoute(route)
       
@@ -28,8 +39,12 @@ export const useNavigation = () => {
       if (params?.matchId !== undefined) {
         setSelectedMatchId(params.matchId)
       }
+
+      if (params?.tab !== undefined) {
+        setSelectedTab(params.tab)
+      }
     },
-    [currentRoute, selectedLeagueId, selectedMatchId]
+    [currentRoute, selectedLeagueId, selectedMatchId, selectedTab]
   )
 
   const goBack = useCallback(() => {
@@ -40,25 +55,38 @@ export const useNavigation = () => {
       setCurrentRoute(prevRoute.route)
       setSelectedLeagueId(prevRoute.leagueId || null)
       setSelectedMatchId(prevRoute.matchId || null)
+      setSelectedTab(prevRoute.tab || null)
     } else {
       // Default fallback if no history
       setCurrentRoute("leagues")
       setSelectedLeagueId(null)
       setSelectedMatchId(null)
+      setSelectedTab(null)
     }
   }, [routeHistory])
+
+  const resetNavigation = useCallback(() => {
+    setCurrentRoute("leagues")
+    setSelectedLeagueId(null)
+    setSelectedMatchId(null)
+    setSelectedTab(null)
+    setRouteHistory([])
+  }, [])
 
   return {
     // Navigation state
     currentRoute,
     selectedLeagueId,
     selectedMatchId,
+    selectedTab,
     
     // Navigation actions
     navigate,
     goBack,
+    resetNavigation,
     
     // For internal use
-    setSelectedLeagueId
+    setSelectedLeagueId,
+    setSelectedTab
   }
 }
