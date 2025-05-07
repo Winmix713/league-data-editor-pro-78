@@ -3,12 +3,17 @@ import { memo } from "react"
 import { Match } from "@/types"
 
 interface MatchesByRoundProps {
-  matchesByRound: Record<number, Match[]>
+  matchesByRound: Record<string, Match[]>
 }
 
 export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => {
   // Get the round numbers and sort them
-  const rounds = Object.keys(matchesByRound).map(Number).sort((a, b) => a - b)
+  const rounds = Object.keys(matchesByRound).sort((a, b) => {
+    // Try to convert to numbers for numeric sorting, handling non-numeric rounds
+    const numA = isNaN(Number(a)) ? Infinity : Number(a)
+    const numB = isNaN(Number(b)) ? Infinity : Number(b)
+    return numA - numB
+  })
   
   if (rounds.length === 0) {
     return (
@@ -26,12 +31,12 @@ export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => 
             <h3 className="text-lg font-medium text-white">Round {round}</h3>
             <div className="h-px bg-white/10 flex-1"></div>
             <span className="text-sm text-gray-500">
-              {matchesByRound[round].length} matches
+              {matchesByRound[round]?.length || 0} matches
             </span>
           </div>
           
           <div className="bg-black/20 border border-white/5 rounded-lg overflow-hidden divide-y divide-white/5">
-            {matchesByRound[round].map((match, index) => (
+            {matchesByRound[round]?.map((match, index) => (
               <div 
                 key={`${round}-${match.home_team}-${match.away_team}-${index}`} 
                 className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-white/5 transition-colors"
