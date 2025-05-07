@@ -10,7 +10,7 @@ export const CSVInstructions = memo(() => {
         04:58,Fulham,Brighton,0,1,1,1<br/>
         04:58,Arsenal,Liverpool,1,0,3,1
       </code>
-      <p className="mt-1">Note: All matches with the same timestamp will be grouped into the same round.</p>
+      <p className="mt-1">Important: All matches with the same timestamp (e.g., "04:58") will be grouped into the same round.</p>
     </div>
   )
 })

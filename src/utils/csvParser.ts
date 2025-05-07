@@ -142,7 +142,7 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
                 return 0
               }
 
-              // Map to our Match format
+              // Map to our Match format with explicit round string
               return {
                 date: dateValue,
                 home_team: homeTeam,
