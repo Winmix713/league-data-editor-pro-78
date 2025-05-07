@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { MatchPredictionCard } from "../cards/MatchPredictionCard";
 
 interface MatchScheduleTabProps {
