@@ -12,10 +12,29 @@ import { MatchesView } from "./MatchesView"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { useToast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster" 
+import { NewLeagueModal } from "@/components/NewLeagueModal"
 
 export default function Index() {
-  const { currentRoute, selectedLeagueId } = useLeagueState();
+  const { 
+    currentRoute, 
+    selectedLeagueId, 
+    leaguesList,
+    isNewLeagueModalOpen,
+    setIsNewLeagueModalOpen,
+    handleLeagueAction,
+    handleCreateLeague,
+    searchTerm,
+    setSearchTerm
+  } = useLeagueState();
+  
   const { toast } = useToast();
+
+  // Filter leagues based on search term
+  const filteredLeagues = leaguesList.filter((league) =>
+    Object.values(league).some((value) => 
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <div className="min-h-screen bg-[#101820] text-white">
@@ -33,7 +52,12 @@ export default function Index() {
 
             <div className="relative p-6">
               {currentRoute === "leagues" && (
-                <LeagueTable />
+                <LeagueTable
+                  leagues={filteredLeagues}
+                  onLeagueAction={handleLeagueAction}
+                  onSearch={(term) => setSearchTerm(term)}
+                  onNewLeague={() => setIsNewLeagueModalOpen(true)}
+                />
               )}
               {currentRoute === "league-details" && selectedLeagueId && (
                 <LeagueDetails />
@@ -63,6 +87,12 @@ export default function Index() {
           </div>
         </main>
       </div>
+      
+      <NewLeagueModal
+        isOpen={isNewLeagueModalOpen}
+        onClose={() => setIsNewLeagueModalOpen(false)}
+        onCreateLeague={handleCreateLeague}
+      />
       
       <Toaster />
     </div>
