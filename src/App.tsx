@@ -8,8 +8,8 @@ import { LeagueDetails } from "./components/LeagueDetails"
 import { NewLeagueModal } from "./components/NewLeagueModal"
 import { calculateStandings } from "./utils/calculations"
 import type { LeagueData, Match } from "./types"
-import { toast } from "sonner"
-import { Toaster } from "sonner"
+import { useToast } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 
 interface AppState {
   selectedLeagueId: string | null
@@ -41,6 +41,7 @@ const initialLeagues: LeagueData[] = [
 ]
 
 export default function App() {
+  const { toast } = useToast()
   const [state, setState] = useState<AppState>({
     selectedLeagueId: null,
     leaguesList: initialLeagues,
@@ -87,7 +88,8 @@ export default function App() {
                 : league,
             ),
           }))
-          toast.success("League Completed", {
+          toast({
+            title: "League Completed",
             description: "The league has been marked as completed.",
           })
           break
@@ -96,17 +98,19 @@ export default function App() {
             ...prev,
             leaguesList: prev.leaguesList.filter((league) => league.id !== leagueId),
           }))
-          toast.error("League Deleted", {
+          toast({
+            title: "League Deleted",
             description: "The league has been permanently deleted.",
+            variant: "destructive",
           })
           break
       }
     },
-    [currentStandings],
+    [currentStandings, toast],
   )
 
   const handleCreateLeague = useCallback(
-    async (leagueId: string) => {
+    (leagueId: string) => {
       const newLeague: LeagueData = {
         id: leagueId,
         name: `League ${leagueId}`,
@@ -121,11 +125,12 @@ export default function App() {
         leaguesList: [...prev.leaguesList, newLeague],
         isNewLeagueModalOpen: false,
       }))
-      toast.success("League Created", {
+      toast({
+        title: "League Created",
         description: `New league "${leagueId}" has been created successfully.`,
       })
     },
-    [],
+    [toast],
   )
 
   const handleUpdateLeague = useCallback(
@@ -134,11 +139,12 @@ export default function App() {
         ...prev,
         leaguesList: prev.leaguesList.map((league) => (league.id === updatedLeague.id ? updatedLeague : league)),
       }))
-      toast.success("League Updated", {
+      toast({
+        title: "League Updated",
         description: "The league details have been updated successfully.",
       })
     },
-    [],
+    [toast],
   )
 
   const handleUpdateMatches = useCallback((updatedMatches: Match[]) => {
@@ -185,7 +191,7 @@ export default function App() {
       />
       
       {/* Add the Toaster component for toast notifications */}
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster />
     </div>
   )
 }
