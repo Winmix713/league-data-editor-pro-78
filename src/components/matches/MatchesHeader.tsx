@@ -1,77 +1,89 @@
 
 import { memo } from "react"
-import { Calendar, Filter } from "lucide-react"
+import { LayoutGrid, Table, SquareStack } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface MatchesHeaderProps {
   viewType: "rounds" | "all" | "cards"
-  onViewTypeChange: (type: "rounds" | "all" | "cards") => void
+  onViewTypeChange: (viewType: "rounds" | "all" | "cards") => void
   onRequestSort: (key: string) => void
   getSortIcon: (key: string) => JSX.Element
 }
 
-export const MatchesHeader = memo(({ viewType, onViewTypeChange, onRequestSort, getSortIcon }: MatchesHeaderProps) => {
+export const MatchesHeader = memo(({
+  viewType,
+  onViewTypeChange,
+  onRequestSort,
+  getSortIcon
+}: MatchesHeaderProps) => {
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div className="flex items-center gap-3">
-        <Calendar className="w-5 h-5 text-blue-500" />
-        <CardTitle className="text-white">Match Schedule</CardTitle>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10 flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              <span>Sort</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#0a0f14] border-white/10 text-white">
-            <DropdownMenuItem
-              onClick={() => onRequestSort("date")}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              Date {getSortIcon("date")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onRequestSort("round")}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              Round {getSortIcon("round")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onRequestSort("goals")}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              Total Goals {getSortIcon("goals")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Tabs
-          value={viewType}
-          onValueChange={(value) => onViewTypeChange(value as "rounds" | "all" | "cards")}
-          className="w-auto"
+    <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
+      <div className="flex gap-3 p-1 bg-black/30 rounded-lg">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onViewTypeChange("rounds")}
+          className={`gap-2 rounded-md px-3 ${
+            viewType === "rounds"
+              ? "bg-blue-500 text-white"
+              : "text-gray-400 hover:bg-white/5 hover:text-white"
+          }`}
         >
-          <TabsList className="bg-black/30 border border-white/10">
-            <TabsTrigger value="rounds" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
-              By Round
-            </TabsTrigger>
-            <TabsTrigger value="all" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
-              All Matches
-            </TabsTrigger>
-            <TabsTrigger value="cards" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
-              Cards
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+          <SquareStack className="h-4 w-4" />
+          <span className="hidden md:inline">By Rounds</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onViewTypeChange("all")}
+          className={`gap-2 rounded-md px-3 ${
+            viewType === "all"
+              ? "bg-blue-500 text-white"
+              : "text-gray-400 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <Table className="h-4 w-4" />
+          <span className="hidden md:inline">Table View</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onViewTypeChange("cards")}
+          className={`gap-2 rounded-md px-3 ${
+            viewType === "cards"
+              ? "bg-blue-500 text-white"
+              : "text-gray-400 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <LayoutGrid className="h-4 w-4" />
+          <span className="hidden md:inline">Card View</span>
+        </Button>
       </div>
+      
+      {viewType === "all" && (
+        <div className="flex gap-2 text-xs text-gray-400">
+          <button
+            onClick={() => onRequestSort("date")}
+            className="flex items-center hover:text-white"
+          >
+            Date {getSortIcon("date")}
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => onRequestSort("homeTeam")}
+            className="flex items-center hover:text-white"
+          >
+            Team {getSortIcon("homeTeam")}
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => onRequestSort("round")}
+            className="flex items-center hover:text-white"
+          >
+            Round {getSortIcon("round")}
+          </button>
+        </div>
+      )}
     </div>
   )
 })

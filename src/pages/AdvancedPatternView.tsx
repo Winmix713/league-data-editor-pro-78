@@ -1,80 +1,63 @@
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
-import { useLeagueState } from "@/hooks/league"
-import { PatternHeader } from "@/components/analysis/patterns/PatternHeader"
-import { AnalysisControls } from "@/components/analysis/patterns/AnalysisControls"
-import { PatternVisualizationTab } from "@/components/analysis/patterns/tabs/PatternVisualizationTab"
-import { CorrelationsTab } from "@/components/analysis/patterns/tabs/CorrelationsTab"
-import { PredictionsTab } from "@/components/analysis/patterns/tabs/PredictionsTab"
-import { extendedPatternData, correlationData, patternMetrics } from "@/data/analysisData"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Grid3X3, Loader } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function AdvancedPatternView() {
-  const [complexityLevel, setComplexityLevel] = useState([50])
-  const [selectedFilter, setSelectedFilter] = useState("all-games")
-  const [activeTab, setActiveTab] = useState("patterns")
-  const { goBack } = useLeagueState()
-  const { toast } = useToast()
-
-  const handleExport = () => {
-    toast({
-      title: "Export Initiated",
-      description: "Advanced pattern analysis report is being generated.",
-    })
-  }
-
   return (
     <div className="space-y-6 animate-fadeIn">
-      <PatternHeader onBack={goBack} onExport={handleExport} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <AnalysisControls 
-            complexityLevel={complexityLevel}
-            selectedFilter={selectedFilter}
-            onComplexityChange={setComplexityLevel}
-            onFilterChange={setSelectedFilter}
-            patternMetrics={patternMetrics}
-          />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Advanced Pattern Recognition</h2>
+          <p className="text-gray-400">Identify play patterns and tactical setups</p>
         </div>
+        <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+          Analyze New Footage
+        </Button>
+      </div>
 
-        <div className="lg:col-span-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 bg-black/20 w-full rounded-xl">
-              <TabsTrigger
-                value="patterns"
-                className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-              >
-                Pattern Visualization
-              </TabsTrigger>
-              <TabsTrigger
-                value="correlations"
-                className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-              >
-                Statistical Correlations
-              </TabsTrigger>
-              <TabsTrigger
-                value="predictions"
-                className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
-              >
-                Advanced Predictions
-              </TabsTrigger>
-            </TabsList>
+      <Card className="bg-black/20 border-white/5">
+        <CardHeader>
+          <CardTitle className="text-white text-lg">Pattern Detection</CardTitle>
+        </CardHeader>
+        <CardContent className="min-h-[500px] flex items-center justify-center">
+          <div className="text-center">
+            <Grid3X3 className="h-16 w-16 text-blue-500/50 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-white mb-2">AI Pattern Recognition</h3>
+            <p className="text-gray-400 max-w-md mb-6">
+              Upload match footage to analyze formation patterns, pressing triggers, and defensive
+              structures. Our AI will identify key tactical setups and provide insights.
+            </p>
+            <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              Upload Match Footage
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-            <TabsContent value="patterns" className="mt-6">
-              <PatternVisualizationTab patternData={extendedPatternData} />
-            </TabsContent>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-black/20 border-white/5">
+          <CardHeader>
+            <CardTitle className="text-white text-lg">Recent Analyses</CardTitle>
+          </CardHeader>
+          <CardContent className="min-h-[200px] flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gray-400">No recent analyses available</p>
+            </div>
+          </CardContent>
+        </Card>
 
-            <TabsContent value="correlations" className="mt-6">
-              <CorrelationsTab correlationData={correlationData} />
-            </TabsContent>
-
-            <TabsContent value="predictions" className="mt-6">
-              <PredictionsTab />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <Card className="bg-black/20 border-white/5">
+          <CardHeader>
+            <CardTitle className="text-white text-lg">Pattern Library</CardTitle>
+          </CardHeader>
+          <CardContent className="min-h-[200px] flex items-center justify-center">
+            <div className="text-center">
+              <Loader className="h-8 w-8 text-blue-500/50 mx-auto mb-4 animate-spin" />
+              <p className="text-gray-400">Loading pattern library...</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

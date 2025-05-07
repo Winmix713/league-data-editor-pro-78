@@ -1,93 +1,154 @@
 
-import { useState } from "react"
+import React from "react"
+import { TrendingUp, Database, Target, Award, Calendar } from "lucide-react"
+import { StatsCard } from "@/components/analysis/cards/StatsCard"
+import { MatchPredictionCard } from "@/components/analysis/cards/MatchPredictionCard"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
-import { useLeagueState } from "@/hooks/league"
-import { AnalysisHeader } from "@/components/analysis/AnalysisHeader"
-import { PatternAnalysisTab } from "@/components/analysis/tabs/PatternAnalysisTab"
-import { PredictionEngineTab } from "@/components/analysis/tabs/PredictionEngineTab"
-import { MatchScheduleTab } from "@/components/analysis/tabs/MatchScheduleTab"
-import { patternData, predictionData, scheduleData } from "@/data/analysisData"
+import { Button } from "@/components/ui/button"
 
 export function AnalysisView() {
-  const [activeTab, setActiveTab] = useState("pattern-analysis")
-  const [selectedLeague, setSelectedLeague] = useState<string>("premier-league")
-  const [selectedSeason, setSelectedSeason] = useState<string>("2023-2024")
-  const { navigate } = useLeagueState()
-  const { toast } = useToast()
-
-  const handleAdvancedPatternClick = () => {
-    navigate("advanced-pattern")
-  }
-
   return (
     <div className="space-y-6 animate-fadeIn">
-      <AnalysisHeader 
-        selectedLeague={selectedLeague}
-        selectedSeason={selectedSeason}
-        onLeagueChange={setSelectedLeague}
-        onSeasonChange={setSelectedSeason}
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Match Analysis</h2>
+          <p className="text-gray-400">Advanced match predictions and analysis</p>
+        </div>
+        <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+          Generate New Prediction
+        </Button>
+      </div>
 
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsCard 
+          title="Win Prediction Accuracy"
+          value="86%" 
+          description="Last 50 matches"
+          color="blue"
+          icon={<Target className="w-5 h-5" />}
+        />
+        <StatsCard 
+          value="1,254" 
+          description="Total matches analyzed"
+          color="emerald"
+          icon={<Database className="w-5 h-5" />}
+        />
+        <StatsCard 
+          value="76%" 
+          description="Home win rate this season"
+          color="amber"
+          icon={<Award className="w-5 h-5" />}
+        />
+        <StatsCard 
+          value="324" 
+          description="Upcoming match predictions"
+          color="purple"
+          icon={<Calendar className="w-5 h-5" />}
+        />
+      </div>
+
+      <Tabs defaultValue="predictions" className="w-full">
         <TabsList className="grid grid-cols-3 bg-black/20 w-full rounded-xl">
-          <TabsTrigger
-            value="pattern-analysis"
+          <TabsTrigger 
+            value="predictions" 
             className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
           >
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M8 18V9" />
-                <path d="M12 18v-5" />
-                <path d="M16 18v-2" />
-              </svg>
-              Pattern Analysis
-            </span>
+            Match Predictions
           </TabsTrigger>
-          <TabsTrigger
-            value="prediction-engine"
+          <TabsTrigger 
+            value="statistics" 
             className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
           >
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <path d="M12 17h.01" />
-              </svg>
-              Prediction Engine
-            </span>
+            Statistics
           </TabsTrigger>
-          <TabsTrigger
-            value="match-schedule"
+          <TabsTrigger 
+            value="trends" 
             className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
           >
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M8 2v4" />
-                <path d="M16 2v4" />
-                <path d="M3 10h18" />
-              </svg>
-              Match Schedule
-            </span>
+            Team Trends
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pattern-analysis" className="mt-6">
-          <PatternAnalysisTab 
-            patternData={patternData} 
-            onAdvancedPatternClick={handleAdvancedPatternClick} 
-          />
+        <TabsContent value="predictions" className="mt-6">
+          <Card className="bg-black/20 border-white/5">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Upcoming Match Predictions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 divide-y divide-white/5">
+              <MatchPredictionCard
+                date="2023-03-18 · 15:00"
+                homeTeam="Manchester United"
+                awayTeam="Liverpool"
+                predictedScore="2-1"
+                confidence={78}
+              />
+              <MatchPredictionCard
+                date="2023-03-19 · 17:30"
+                homeTeam="Arsenal"
+                awayTeam="Manchester City"
+                predictedScore="1-2"
+                confidence={64}
+              />
+              <MatchPredictionCard
+                date="2023-03-19 · 14:00"
+                homeTeam="Chelsea"
+                awayTeam="Tottenham"
+                predictedScore="2-2"
+                confidence={52}
+              />
+              <MatchPredictionCard
+                date="2023-03-20 · 20:00"
+                homeTeam="Leicester City"
+                awayTeam="Brighton"
+                predictedScore="0-1"
+                confidence={61}
+              />
+              <MatchPredictionCard
+                date="2023-03-21 · 20:45"
+                homeTeam="West Ham"
+                awayTeam="Newcastle"
+                predictedScore="1-1"
+                confidence={67}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="prediction-engine" className="mt-6">
-          <PredictionEngineTab predictionData={predictionData} />
+        <TabsContent value="statistics" className="mt-6">
+          <Card className="bg-black/20 border-white/5">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">League Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-[400px] flex items-center justify-center">
+              <div className="text-center">
+                <TrendingUp className="h-16 w-16 text-blue-500/50 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">Advanced Statistics</h3>
+                <p className="text-gray-400 max-w-md">
+                  Comprehensive statistics dashboard coming soon. Track team performance,
+                  player stats, and league trends with our advanced analytics tools.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="match-schedule" className="mt-6">
-          <MatchScheduleTab scheduleData={scheduleData} />
+        <TabsContent value="trends" className="mt-6">
+          <Card className="bg-black/20 border-white/5">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Team Performance Trends</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-[400px] flex items-center justify-center">
+              <div className="text-center">
+                <TrendingUp className="h-16 w-16 text-blue-500/50 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">Performance Analytics</h3>
+                <p className="text-gray-400 max-w-md">
+                  Detailed team trend analysis coming soon. Track form, goal trends,
+                  and performance metrics over time for all teams in your leagues.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

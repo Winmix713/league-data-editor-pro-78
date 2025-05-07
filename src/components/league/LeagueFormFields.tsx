@@ -1,51 +1,128 @@
 
-import { useState, memo } from "react"
+import { useCallback } from "react"
 import type { LeagueData } from "../../types"
-import { Input } from "@/components/ui/input"
 
 interface LeagueFormFieldsProps {
   league: LeagueData
-  onChange: (league: LeagueData) => void
+  onChange: (updatedLeague: LeagueData) => void
 }
 
-export const LeagueFormFields = memo(({ league, onChange }: LeagueFormFieldsProps) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    onChange({ ...league, [name]: value })
-  }
+export const LeagueFormFields = ({ league, onChange }: LeagueFormFieldsProps) => {
+  const handleChange = useCallback(
+    (field: keyof LeagueData, value: string) => {
+      onChange({
+        ...league,
+        [field]: value,
+      })
+    },
+    [league, onChange]
+  )
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
-        <label htmlFor="leagueName" className="text-gray-300 text-sm">
+        <label htmlFor="league-name" className="block text-sm text-gray-300">
           League Name
         </label>
-        <Input
+        <input
+          id="league-name"
           type="text"
-          id="leagueName"
-          name="name"
           value={league.name}
-          onChange={handleInputChange}
-          className="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Enter league name"
+          onChange={(e) => handleChange("name", e.target.value)}
+          className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                   focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
+      
       <div className="space-y-2">
-        <label htmlFor="leagueSeason" className="text-gray-300 text-sm">
+        <label htmlFor="league-season" className="block text-sm text-gray-300">
           Season
         </label>
-        <Input
+        <input
+          id="league-season"
           type="text"
-          id="leagueSeason"
-          name="season"
           value={league.season}
-          onChange={handleInputChange}
-          className="w-full p-3 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Enter season (e.g., 2023-24)"
+          onChange={(e) => handleChange("season", e.target.value)}
+          className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                   focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="league-id" className="block text-sm text-gray-300">
+          League ID
+        </label>
+        <input
+          id="league-id"
+          type="text"
+          value={league.id}
+          readOnly
+          className="w-full bg-black/30 text-gray-400 border border-white/10 rounded-lg px-4 py-2.5 cursor-not-allowed"
+        />
+        <p className="text-xs text-gray-500">League ID cannot be changed after creation</p>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="league-status" className="block text-sm text-gray-300">
+          Status
+        </label>
+        <select
+          id="league-status"
+          value={league.status}
+          onChange={(e) => handleChange("status", e.target.value)}
+          className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                   focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      
+      {league.status === "Completed" && (
+        <>
+          <div className="space-y-2">
+            <label htmlFor="league-winner" className="block text-sm text-gray-300">
+              Winner
+            </label>
+            <input
+              id="league-winner"
+              type="text"
+              value={league.winner}
+              onChange={(e) => handleChange("winner", e.target.value)}
+              className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="league-runner-up" className="block text-sm text-gray-300">
+              Runner Up
+            </label>
+            <input
+              id="league-runner-up"
+              type="text"
+              value={league.secondPlace}
+              onChange={(e) => handleChange("secondPlace", e.target.value)}
+              className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="league-third" className="block text-sm text-gray-300">
+              Third Place
+            </label>
+            <input
+              id="league-third"
+              type="text"
+              value={league.thirdPlace}
+              onChange={(e) => handleChange("thirdPlace", e.target.value)}
+              className="w-full bg-black/30 text-white border border-white/10 rounded-lg px-4 py-2.5
+                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </>
+      )}
     </div>
   )
-})
-
-LeagueFormFields.displayName = "LeagueFormFields"
+}

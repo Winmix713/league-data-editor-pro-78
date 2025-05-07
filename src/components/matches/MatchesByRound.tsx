@@ -1,68 +1,82 @@
 
 import { memo } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MatchScore } from "./MatchScore"
-import type { Match } from "@/types"
+import { Match } from "@/types"
 
 interface MatchesByRoundProps {
-  matchesByRound: Record<string, Match[]>
+  matchesByRound: Record<number, Match[]>
 }
 
 export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => {
-  if (Object.keys(matchesByRound).length === 0) {
+  // Get the round numbers and sort them
+  const rounds = Object.keys(matchesByRound).map(Number).sort((a, b) => a - b)
+  
+  if (rounds.length === 0) {
     return (
-      <div className="text-center py-8 text-white opacity-70">No matches found with the current filters.</div>
+      <div className="text-center py-12">
+        <p className="text-gray-400">No matches organized by rounds available</p>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {Object.entries(matchesByRound).map(([round, roundMatches]) => (
-        <div key={round} className="bg-black/30 rounded-xl overflow-hidden border border-white/5">
-          <div className="flex items-center gap-2 p-3 bg-black/40">
-            <span className="w-6 h-6 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
-              {round}
+    <div className="space-y-6 mt-2">
+      {rounds.map((round) => (
+        <div key={round} className="animate-fadeIn">
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-lg font-medium text-white">Round {round}</h3>
+            <div className="h-px bg-white/10 flex-1"></div>
+            <span className="text-sm text-gray-500">
+              {matchesByRound[round].length} matches
             </span>
-            <h4 className="text-base font-medium text-white">Round {round}</h4>
-            <span className="text-xs text-gray-400 ml-auto">{roundMatches.length} matches</span>
           </div>
-          <Table>
-            <TableHeader className="bg-black/20">
-              <TableRow className="border-b border-white/5 hover:bg-transparent">
-                <TableHead className="text-gray-400 font-normal">Date</TableHead>
-                <TableHead className="text-gray-400 font-normal">Home Team</TableHead>
-                <TableHead className="text-gray-400 font-normal">Away Team</TableHead>
-                <TableHead className="text-gray-400 font-normal text-center">HT</TableHead>
-                <TableHead className="text-gray-400 font-normal text-center">FT</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roundMatches.map((match, index) => (
-                <TableRow
-                  key={`${match.home_team}-${match.away_team}-${index}`}
-                  className="border-b border-white/5 hover:bg-white/5"
-                >
-                  <TableCell>{match.date}</TableCell>
-                  <TableCell
-                    className={`font-medium text-white ${match.home_score > match.away_score ? "font-bold" : ""}`}
-                  >
-                    {match.home_team}
-                  </TableCell>
-                  <TableCell
-                    className={`font-medium text-white ${match.home_score < match.away_score ? "font-bold" : ""}`}
-                  >
-                    {match.away_team}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <MatchScore homeScore={match.ht_home_score} awayScore={match.ht_away_score} isHalfTime />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <MatchScore homeScore={match.home_score} awayScore={match.away_score} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          
+          <div className="bg-black/20 border border-white/5 rounded-lg overflow-hidden divide-y divide-white/5">
+            {matchesByRound[round].map((match) => (
+              <div 
+                key={match.id} 
+                className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center mb-2 sm:mb-0 sm:mr-auto">
+                  <div className="text-sm text-gray-400 w-24 hidden sm:block">
+                    {match.date}
+                  </div>
+                  
+                  <div className="flex flex-1 items-center gap-4">
+                    <div className="text-right flex-1">
+                      <p className="font-medium text-white">{match.homeTeam}</p>
+                    </div>
+                    
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-lg text-white">{match.homeScore}</span>
+                        <span className="text-gray-500 px-0.5">-</span>
+                        <span className="font-bold text-lg text-white">{match.awayScore}</span>
+                      </div>
+                      
+                      {match.halfTimeScore && (
+                        <span className="text-xs text-gray-500">
+                          HT: {match.halfTimeScore}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <p className="font-medium text-white">{match.awayTeam}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-2 sm:mt-0 flex items-center justify-end gap-4 text-sm">
+                  <span className="text-xs text-gray-500 sm:hidden">
+                    {match.date}
+                  </span>
+                  <button className="text-blue-400 hover:text-blue-300 text-xs">
+                    Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
