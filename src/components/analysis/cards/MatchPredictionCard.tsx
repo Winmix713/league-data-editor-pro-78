@@ -6,9 +6,10 @@ interface MatchPredictionCardProps {
   homeTeam: string
   awayTeam: string
   predictedScore: string
+  confidence?: number
 }
 
-export function MatchPredictionCard({ date, homeTeam, awayTeam, predictedScore }: MatchPredictionCardProps) {
+export function MatchPredictionCard({ date, homeTeam, awayTeam, predictedScore, confidence }: MatchPredictionCardProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-center p-4">
       <div className="flex items-center gap-4 mb-3 md:mb-0">
@@ -25,6 +26,9 @@ export function MatchPredictionCard({ date, homeTeam, awayTeam, predictedScore }
         <div className="text-center">
           <p className="text-sm text-gray-400">Predicted Score</p>
           <p className="text-xl font-bold text-blue-400">{predictedScore}</p>
+          {confidence !== undefined && (
+            <p className="text-xs text-gray-500">Confidence: {confidence}%</p>
+          )}
         </div>
         <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
           Details

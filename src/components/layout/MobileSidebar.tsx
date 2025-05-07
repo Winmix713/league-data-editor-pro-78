@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useLeagueState } from "@/hooks/league"
 import { Badge } from "@/components/ui/badge"
+import { RouteType } from "@/hooks/league/types"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -13,25 +14,25 @@ export function MobileSidebar({ className }: SidebarProps) {
   const mainNavItems = [
     { 
       title: "Leagues", 
-      route: "leagues", 
+      route: "leagues" as RouteType, 
       icon: Trophy,
       description: "Manage your leagues"
     },
     { 
       title: "Matches", 
-      route: "matches", 
+      route: "matches" as RouteType, 
       icon: CalendarDays,
       description: "View all match data" 
     },
     { 
       title: "Analysis", 
-      route: "analysis", 
+      route: "analysis" as RouteType, 
       icon: BarChart3,
       description: "Match prediction analytics"
     },
     { 
       title: "League Analytics", 
-      route: "league-analytics", 
+      route: "league-analytics" as RouteType, 
       icon: PieChart,
       description: "Team and league stats" 
     },
@@ -40,13 +41,13 @@ export function MobileSidebar({ className }: SidebarProps) {
   const secondaryNavItems = [
     { 
       title: "League Management", 
-      route: "league-management", 
+      route: "league-management" as RouteType, 
       icon: LayoutGrid,
       isNew: true
     },
     { 
       title: "Integrations", 
-      route: "integrations", 
+      route: "integrations" as RouteType, 
       icon: Grid3X3 
     },
   ];
