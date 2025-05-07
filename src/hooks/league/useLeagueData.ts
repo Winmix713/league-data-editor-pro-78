@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from "react"
 import { initialLeagues } from "./constants"
+import { v4 as uuidv4 } from 'uuid'
 import type { LeagueData, Match } from "@/types"
 
 export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) => {
@@ -36,15 +37,16 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
     }
   }, [setSelectedLeagueId])
 
-  const handleCreateLeague = useCallback((leagueId: string) => {
+  const handleCreateLeague = useCallback((leagueData: Partial<LeagueData>) => {
+    const id = leagueData.id || uuidv4()
     const newLeague: LeagueData = {
-      id: leagueId,
-      name: `League ${leagueId}`,
-      season: "2023-2024",
-      winner: "-",
-      secondPlace: "-",
-      thirdPlace: "-",
-      status: "In Progress",
+      id: id,
+      name: leagueData.name || `League ${id}`,
+      season: leagueData.season || "2023-2024",
+      winner: leagueData.winner || "-",
+      secondPlace: leagueData.secondPlace || "-",
+      thirdPlace: leagueData.thirdPlace || "-",
+      status: leagueData.status || "In Progress",
     }
     setLeaguesList(prev => [...prev, newLeague])
     setIsNewLeagueModalOpen(false)

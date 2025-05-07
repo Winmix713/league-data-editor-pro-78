@@ -3,6 +3,7 @@ import { createContext, useContext } from "react"
 import { useNavigation } from "./useNavigation"
 import { useLeagueData } from "./useLeagueData" 
 import type { LeagueState } from "./types"
+import type { LeagueData } from "@/types"
 
 // Create context
 const LeagueStateContext = createContext<LeagueState | undefined>(undefined)

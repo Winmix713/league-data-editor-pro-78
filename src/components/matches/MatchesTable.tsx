@@ -47,8 +47,8 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
       <CardHeader className="pb-0">
         <MatchesHeader
           viewType={viewType}
-          onViewTypeChange={setViewType}
-          onRequestSort={requestSort}
+          setViewType={setViewType}
+          requestSort={requestSort}
           getSortIcon={getSortIcon}
         />
       </CardHeader>
