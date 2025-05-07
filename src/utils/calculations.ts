@@ -1,3 +1,4 @@
+
 import { z } from "zod"
 
 export const matchSchema = z.object({
@@ -148,19 +149,26 @@ export class LeagueStatsCalculator {
   public getTeamForms(): TeamForm[] {
     if (this.teamStats.size === 0) return []
 
-    return this.sortTeams(
-      Array.from(this.teamStats.values()).map((stats) => ({
-        position: 0, // Will be set after sorting
-        team: stats.team,
-        played: stats.played,
-        goalsFor: stats.goalsFor,
-        goalsAgainst: stats.goalsAgainst,
-        points: stats.points,
-        form: [...stats.form],
-      })),
-    ).map((form, index) => ({
-      ...form,
+    const teamStats = Array.from(this.teamStats.values()).map((stats) => ({
+      position: 0, // Will be set after sorting
+      team: stats.team,
+      played: stats.played,
+      goalsFor: stats.goalsFor,
+      goalsAgainst: stats.goalsAgainst,
+      goalDifference: stats.goalDifference, // Added this missing property
+      points: stats.points,
+      form: [...stats.form],
+    }))
+
+    // Use the sortTeams method to sort the team forms and then map to assign positions
+    return this.sortTeams(teamStats).map((form, index) => ({
       position: index + 1,
+      team: form.team,
+      played: form.played,
+      goalsFor: form.goalsFor,
+      goalsAgainst: form.goalsAgainst,
+      points: form.points,
+      form: form.form,
     }))
   }
 }

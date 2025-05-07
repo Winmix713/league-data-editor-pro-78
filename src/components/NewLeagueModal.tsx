@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useCallback, useState } from "react"
@@ -24,7 +25,7 @@ type FormValues = z.infer<typeof formSchema>
 interface NewLeagueModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreateLeague: (leagueId: string) => Promise<void>
+  onCreateLeague: (leagueId: string) => void // Changed from Promise<void> to void
 }
 
 export function NewLeagueModal({ isOpen, onClose, onCreateLeague }: NewLeagueModalProps) {
@@ -41,7 +42,7 @@ export function NewLeagueModal({ isOpen, onClose, onCreateLeague }: NewLeagueMod
     async (values: FormValues) => {
       try {
         setIsSubmitting(true)
-        await onCreateLeague(values.leagueId)
+        onCreateLeague(values.leagueId)
         form.reset()
         onClose()
       } catch (error) {

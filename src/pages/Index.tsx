@@ -137,7 +137,6 @@ const Matches = () => {
           onBack={handleBackToList}
           onUpdateLeague={handleLeagueUpdate}
           onUpdateMatches={handleMatchesUpdate}
-          onNavigateToTab={(tabName: string) => setActiveTab(tabName)}
         />
       );
     }
