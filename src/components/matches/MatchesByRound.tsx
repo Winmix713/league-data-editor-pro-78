@@ -31,9 +31,9 @@ export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => 
           </div>
           
           <div className="bg-black/20 border border-white/5 rounded-lg overflow-hidden divide-y divide-white/5">
-            {matchesByRound[round].map((match) => (
+            {matchesByRound[round].map((match, index) => (
               <div 
-                key={match.id} 
+                key={`${round}-${match.home_team}-${match.away_team}-${index}`} 
                 className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center mb-2 sm:mb-0 sm:mr-auto">
@@ -43,25 +43,23 @@ export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => 
                   
                   <div className="flex flex-1 items-center gap-4">
                     <div className="text-right flex-1">
-                      <p className="font-medium text-white">{match.homeTeam}</p>
+                      <p className="font-medium text-white">{match.home_team}</p>
                     </div>
                     
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg text-white">{match.homeScore}</span>
+                        <span className="font-bold text-lg text-white">{match.home_score}</span>
                         <span className="text-gray-500 px-0.5">-</span>
-                        <span className="font-bold text-lg text-white">{match.awayScore}</span>
+                        <span className="font-bold text-lg text-white">{match.away_score}</span>
                       </div>
                       
-                      {match.halfTimeScore && (
-                        <span className="text-xs text-gray-500">
-                          HT: {match.halfTimeScore}
-                        </span>
-                      )}
+                      <span className="text-xs text-gray-500">
+                        HT: {match.ht_home_score} - {match.ht_away_score}
+                      </span>
                     </div>
                     
                     <div className="flex-1">
-                      <p className="font-medium text-white">{match.awayTeam}</p>
+                      <p className="font-medium text-white">{match.away_team}</p>
                     </div>
                   </div>
                 </div>

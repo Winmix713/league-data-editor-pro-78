@@ -10,13 +10,14 @@ export interface LeagueData {
 }
 
 export interface Match {
-  id: string
+  id?: string
   date: string
-  homeTeam: string
-  awayTeam: string
-  homeScore: number | string
-  awayScore: number | string
-  halfTimeScore?: string
+  home_team: string
+  away_team: string
+  home_score: number
+  away_score: number
+  ht_home_score: number
+  ht_away_score: number
   round?: number | string
   venue?: string
 }

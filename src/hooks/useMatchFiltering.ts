@@ -42,28 +42,28 @@ export function useMatchFiltering(matches: Match[]) {
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase()
         const matchesSearch = (
-          match.homeTeam.toLowerCase().includes(searchTerm) ||
-          match.awayTeam.toLowerCase().includes(searchTerm) ||
-          `${match.homeScore}-${match.awayScore}`.includes(searchTerm) ||
+          match.home_team.toLowerCase().includes(searchTerm) ||
+          match.away_team.toLowerCase().includes(searchTerm) ||
+          `${match.home_score}-${match.away_score}`.includes(searchTerm) ||
           (match.date && match.date.toLowerCase().includes(searchTerm))
         )
         if (!matchesSearch) return false
       }
       
       // Home team filter
-      if (filters.homeTeam && !match.homeTeam.toLowerCase().includes(filters.homeTeam.toLowerCase())) {
+      if (filters.homeTeam && !match.home_team.toLowerCase().includes(filters.homeTeam.toLowerCase())) {
         return false
       }
       
       // Away team filter
-      if (filters.awayTeam && !match.awayTeam.toLowerCase().includes(filters.awayTeam.toLowerCase())) {
+      if (filters.awayTeam && !match.away_team.toLowerCase().includes(filters.awayTeam.toLowerCase())) {
         return false
       }
       
       // Result filter
       if (filters.result) {
-        const homeScore = parseInt(match.homeScore.toString(), 10)
-        const awayScore = parseInt(match.awayScore.toString(), 10)
+        const homeScore = match.home_score
+        const awayScore = match.away_score
         
         if (filters.result === 'home' && homeScore <= awayScore) return false
         if (filters.result === 'away' && homeScore >= awayScore) return false

@@ -40,22 +40,22 @@ export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon }: M
               </div>
             </TableHead>
             <TableHead 
-              onClick={() => onRequestSort("homeTeam")}
+              onClick={() => onRequestSort("home_team")}
               className="text-gray-400 font-normal cursor-pointer hover:text-white"
             >
               <div className="flex items-center">
-                Home Team {getSortIcon("homeTeam")}
+                Home Team {getSortIcon("home_team")}
               </div>
             </TableHead>
             <TableHead className="text-gray-400 font-normal w-24 text-center">
               Score
             </TableHead>
             <TableHead 
-              onClick={() => onRequestSort("awayTeam")}
+              onClick={() => onRequestSort("away_team")}
               className="text-gray-400 font-normal cursor-pointer hover:text-white"
             >
               <div className="flex items-center">
-                Away Team {getSortIcon("awayTeam")}
+                Away Team {getSortIcon("away_team")}
               </div>
             </TableHead>
             <TableHead className="text-gray-400 font-normal w-24">
@@ -67,8 +67,8 @@ export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon }: M
           </TableRow>
         </TableHeader>
         <TableBody>
-          {matches.map((match) => (
-            <TableRow key={match.id} className="border-b border-white/5 hover:bg-white/5">
+          {matches.map((match, index) => (
+            <TableRow key={`${match.home_team}-${match.away_team}-${index}`} className="border-b border-white/5 hover:bg-white/5">
               <TableCell className="font-medium text-sm">
                 {match.date}
               </TableCell>
@@ -76,16 +76,16 @@ export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon }: M
                 {match.round}
               </TableCell>
               <TableCell>
-                {match.homeTeam}
+                {match.home_team}
               </TableCell>
               <TableCell className="font-bold text-center">
-                {match.homeScore} - {match.awayScore}
+                {match.home_score} - {match.away_score}
               </TableCell>
               <TableCell>
-                {match.awayTeam}
+                {match.away_team}
               </TableCell>
               <TableCell className="text-gray-400 text-sm">
-                {match.halfTimeScore || "—"}
+                {`${match.ht_home_score} - ${match.ht_away_score}`}
               </TableCell>
               <TableCell className="text-right">
                 <button className="text-blue-400 hover:text-blue-300 text-sm">

@@ -18,9 +18,9 @@ export const MatchesCardsView = memo(({ matches }: MatchesCardsViewProps) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-      {matches.map((match) => (
+      {matches.map((match, index) => (
         <div 
-          key={match.id} 
+          key={`${match.home_team}-${match.away_team}-${index}`} 
           className="bg-black/30 border border-white/5 rounded-lg overflow-hidden transition-all hover:bg-black/40"
         >
           <div className="p-3 border-b border-white/5 flex justify-between items-center bg-black/20">
@@ -36,21 +36,19 @@ export const MatchesCardsView = memo(({ matches }: MatchesCardsViewProps) => {
           <div className="p-4">
             <div className="flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <span className="text-white font-medium">{match.homeTeam}</span>
-                <span className="text-xl font-bold text-white">{match.homeScore}</span>
+                <span className="text-white font-medium">{match.home_team}</span>
+                <span className="text-xl font-bold text-white">{match.home_score}</span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-white font-medium">{match.awayTeam}</span>
-                <span className="text-xl font-bold text-white">{match.awayScore}</span>
+                <span className="text-white font-medium">{match.away_team}</span>
+                <span className="text-xl font-bold text-white">{match.away_score}</span>
               </div>
             </div>
             
-            {match.halfTimeScore && (
-              <div className="mt-4 text-xs text-gray-500">
-                Half-time: {match.halfTimeScore}
-              </div>
-            )}
+            <div className="mt-4 text-xs text-gray-500">
+              Half-time: {match.ht_home_score} - {match.ht_away_score}
+            </div>
           </div>
           
           <div className="px-4 py-3 border-t border-white/5 bg-black/10 flex justify-between">
