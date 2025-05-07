@@ -1,130 +1,70 @@
 
-import React, { useEffect } from 'react'
 import { Header } from "@/components/Header"
 import { LeagueDetails } from "@/components/LeagueDetails"
-import MatchDetail from "@/components/MatchDetail"
-import MobileSidebar from "@/components/layout/MobileSidebar"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useLeagueState } from '@/hooks/useLeagueState'
-import { LeagueListView } from './league/LeagueListView'
-import { LeagueStatsView } from './league/LeagueStatsView'
-import { LeagueEditorView } from './league/LeagueEditorView'
+import { useLeagueState } from "@/hooks/useLeagueState"
+import { AnalysisView } from "./AnalysisView"
+import { AdvancedPatternView } from "./AdvancedPatternView"
+import { IntegrationsView } from "./IntegrationsView"
+import { LeagueAnalyticsView } from "./league/LeagueAnalyticsView"
+import { LeagueManagementView } from "./league/LeagueManagementView"
+import { LeagueTable } from "@/components/LeagueTable"
+import { MatchesView } from "./MatchesView"
+import { MobileSidebar } from "@/components/layout/MobileSidebar"
+import { useToast } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster" 
 
-const Matches = () => {
-  const {
-    activeTab,
-    setActiveTab,
-    isEditing, 
-    setIsEditing,
-    selectedLeague,
-    matches,
-    dataUpdatedAt,
-    isRefreshing,
-    isLoading,
-    setIsLoading,
-    currentRoute,
-    isMatchDetailOpen,
-    selectedMatch,
-    setIsMatchDetailOpen,
-    handleRefreshData,
-    handleLeagueUpdate,
-    handleMatchesUpdate,
-    handleNavigate,
-    handleSelectLeague,
-    handleBackToList,
-    handleBackFromEditor,
-    handleOpenMatchDetail
-  } = useLeagueState()
-
-  const isMobile = useIsMobile()
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500)
-    return () => clearTimeout(timer)
-  }, [setIsLoading])
-
-  const renderContent = () => {
-    if (isEditing) {
-      return <LeagueEditorView onBack={handleBackFromEditor} />
-    }
-    
-    if (activeTab === "league-list") {
-      return (
-        <LeagueListView
-          dataUpdatedAt={dataUpdatedAt}
-          isRefreshing={isRefreshing}
-          onRefresh={handleRefreshData}
-          onEdit={() => setIsEditing(true)}
-          onSelectLeague={handleSelectLeague}
-        />
-      )
-    }
-
-    if (activeTab === "league-details" && selectedLeague) {
-      return (
-        <LeagueDetails
-          league={selectedLeague}
-          matches={matches}
-          onBack={handleBackToList}
-          onUpdateLeague={handleLeagueUpdate}
-          onUpdateMatches={handleMatchesUpdate}
-        />
-      )
-    }
-
-    if (["matches", "standings", "form", "statistics"].includes(activeTab) && selectedLeague) {
-      return (
-        <LeagueStatsView
-          league={selectedLeague}
-          matches={matches}
-          activeTab={activeTab}
-          isLoading={isLoading}
-          onTabChange={setActiveTab}
-          onBackToLeagueDetails={() => setActiveTab('league-details')}
-          onMatchClick={handleOpenMatchDetail}
-        />
-      )
-    }
-
-    if (["matches", "standings", "form"].includes(activeTab) && !selectedLeague) {
-      return (
-        <div className="text-center py-8 text-muted-foreground">
-          Please select a league from the 'League List' tab first.
-          <Button onClick={() => setActiveTab('league-list')} variant="link">Go to League List</Button>
-        </div>
-      )
-    }
-
-    return null
-  }
+export default function Index() {
+  const { currentRoute, selectedLeagueId } = useLeagueState();
+  const { toast } = useToast();
 
   return (
-    <div className="min-h-screen pt-16 pb-16 bg-background">
-      <Header />
-      
-      <div className="container mx-auto px-4 pt-8">
-        <div className="flex items-center gap-4 mb-6">
-          <MobileSidebar onNavigate={handleNavigate} currentRoute={currentRoute} />
-          {isMobile && <h1 className="text-xl font-bold">Soccer Stats Pro</h1>}
-        </div>
-        
-        <div className="flex flex-col space-y-6">
-          {renderContent()}
+    <div className="min-h-screen bg-[#101820] text-white">
+      <Header currentSeason="2023-2024" />
+
+      <div className="flex">
+        <div className="hidden md:block w-64 bg-[#0a0f14] border-r border-white/5 min-h-[calc(100vh-72px)] sticky top-[72px]">
+          <MobileSidebar />
         </div>
 
-        {selectedMatch && (
-          <MatchDetail
-            match={selectedMatch}
-            isOpen={isMatchDetailOpen}
-            onClose={() => setIsMatchDetailOpen(false)}
-          />
-        )}
+        <main className="flex-1 container mx-auto p-4 md:p-8">
+          <div className="relative overflow-hidden rounded-xl bg-[#0a0f14] border border-white/5 shadow-lg">
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+
+            <div className="relative p-6">
+              {currentRoute === "leagues" && (
+                <LeagueTable />
+              )}
+              {currentRoute === "league-details" && selectedLeagueId && (
+                <LeagueDetails />
+              )}
+              {currentRoute === "analysis" && (
+                <AnalysisView />
+              )}
+              {currentRoute === "advanced-pattern" && (
+                <AdvancedPatternView />
+              )}
+              {currentRoute === "integrations" && (
+                <IntegrationsView />
+              )}
+              {currentRoute === "league-analytics" && (
+                <LeagueAnalyticsView />
+              )}
+              {currentRoute === "league-management" && (
+                <LeagueManagementView />
+              )}
+              {currentRoute === "matches" && (
+                <MatchesView />
+              )}
+
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+          </div>
+        </main>
       </div>
+      
+      <Toaster />
     </div>
-  )
+  );
 }
-
-export default Matches
-
-// Fix missing import
-import { Button } from "@/components/ui/button"

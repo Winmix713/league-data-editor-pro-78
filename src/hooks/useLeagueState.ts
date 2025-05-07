@@ -1,113 +1,89 @@
 
-import { useState } from "react"
-import { toast } from "sonner"
-import type { LeagueData, Match } from "@/types"
+import { useState, createContext, useContext, useCallback } from "react"
 
-interface UseLeagueStateProps {
-  initialActiveTab?: string
-  initialSelectedLeague?: LeagueData | null
-  initialMatches?: Match[]
+type RouteType = 
+  | "leagues" 
+  | "league-details" 
+  | "analysis" 
+  | "advanced-pattern" 
+  | "integrations" 
+  | "league-analytics" 
+  | "league-management" 
+  | "matches"
+
+interface LeagueState {
+  currentRoute: RouteType
+  selectedLeagueId: string | null
+  selectedMatchId: string | null
+  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string }) => void
+  goBack: () => void
 }
 
-export function useLeagueState({
-  initialActiveTab = "league-list",
-  initialSelectedLeague = null,
-  initialMatches = [],
-}: UseLeagueStateProps = {}) {
-  const [activeTab, setActiveTab] = useState(initialActiveTab)
-  const [isEditing, setIsEditing] = useState(false)
-  const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(initialSelectedLeague)
-  const [matches, setMatches] = useState<Match[]>(initialMatches)
-  const [dataUpdatedAt, setDataUpdatedAt] = useState(new Date())
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [currentRoute, setCurrentRoute] = useState('/')
-  
-  // State for MatchDetail dialog
-  const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false)
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+const LeagueStateContext = createContext<LeagueState | undefined>(undefined)
 
-  const handleRefreshData = () => {
-    setIsRefreshing(true)
-    setTimeout(() => {
-      setIsRefreshing(false)
-      const now = new Date()
-      setDataUpdatedAt(now)
-      toast.success("Data refreshed successfully", {
-        description: `All data has been updated as of ${now.toLocaleTimeString()}`
-      })
-    }, 2000)
+export const useLeagueState = () => {
+  const context = useContext(LeagueStateContext)
+  if (context === undefined) {
+    throw new Error("useLeagueState must be used within a LeagueStateProvider")
   }
+  return context
+}
 
-  const handleLeagueUpdate = (updatedLeague: LeagueData) => {
-    setSelectedLeague(updatedLeague)
-    toast("League details updated.")
-  }
+interface LeagueStateProviderProps {
+  children: React.ReactNode
+}
 
-  const handleMatchesUpdate = (updatedMatches: Match[]) => {
-    setMatches(updatedMatches)
-    toast("Matches updated.")
-  }
+export const LeagueStateProvider = ({ children }: LeagueStateProviderProps) => {
+  const [currentRoute, setCurrentRoute] = useState<RouteType>("leagues")
+  const [routeHistory, setRouteHistory] = useState<Array<{ route: RouteType; leagueId?: string; matchId?: string }>>([])
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null)
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
 
-  const handleNavigate = (route: string) => {
-    setCurrentRoute(route)
-    // Handle navigation based on routes
-    if (route === '/' || route === '/leagues') {
-      setActiveTab('league-list')
-    } else if (route === '/statistics' && selectedLeague) {
-      setActiveTab('statistics')
+  const navigate = useCallback(
+    (route: RouteType, params?: { leagueId?: string; matchId?: string }) => {
+      // Add current route to history before changing
+      setRouteHistory((prev) => [...prev, { route: currentRoute, leagueId: selectedLeagueId || undefined, matchId: selectedMatchId || undefined }])
+      
+      setCurrentRoute(route)
+      
+      if (params?.leagueId !== undefined) {
+        setSelectedLeagueId(params.leagueId)
+      }
+      
+      if (params?.matchId !== undefined) {
+        setSelectedMatchId(params.matchId)
+      }
+    },
+    [currentRoute, selectedLeagueId, selectedMatchId]
+  )
+
+  const goBack = useCallback(() => {
+    if (routeHistory.length > 0) {
+      const prevRoute = routeHistory[routeHistory.length - 1]
+      setRouteHistory((prev) => prev.slice(0, -1))
+      
+      setCurrentRoute(prevRoute.route)
+      setSelectedLeagueId(prevRoute.leagueId || null)
+      setSelectedMatchId(prevRoute.matchId || null)
+    } else {
+      // Default fallback if no history
+      setCurrentRoute("leagues")
+      setSelectedLeagueId(null)
+      setSelectedMatchId(null)
     }
-  }
+  }, [routeHistory])
 
-  const handleSelectLeague = (league: LeagueData, leagueMatches: Match[]) => {
-    setSelectedLeague(league)
-    setMatches(leagueMatches)
-    setActiveTab("league-details")
-    setIsLoading(false)
-  }
-
-  const handleBackToList = () => {
-    setActiveTab("league-list")
-  }
-  
-  const handleBackFromEditor = () => {
-    setIsEditing(false)
-    setActiveTab("league-list")
-  }
-
-  const handleOpenMatchDetail = (match: Match) => {
-    setSelectedMatch(match)
-    setIsMatchDetailOpen(true)
-  }
-
-  return {
-    activeTab,
-    setActiveTab,
-    isEditing,
-    setIsEditing,
-    selectedLeague,
-    setSelectedLeague,
-    matches,
-    setMatches,
-    dataUpdatedAt,
-    setDataUpdatedAt,
-    isRefreshing,
-    setIsRefreshing,
-    isLoading,
-    setIsLoading,
-    currentRoute,
-    setCurrentRoute,
-    isMatchDetailOpen,
-    setIsMatchDetailOpen,
-    selectedMatch,
-    setSelectedMatch,
-    handleRefreshData,
-    handleLeagueUpdate,
-    handleMatchesUpdate,
-    handleNavigate,
-    handleSelectLeague,
-    handleBackToList,
-    handleBackFromEditor,
-    handleOpenMatchDetail,
-  }
+  return (
+    <LeagueStateContext.Provider
+      value={{
+        currentRoute,
+        selectedLeagueId,
+        selectedMatchId,
+        navigate,
+        goBack,
+      }}
+    >
+      {children}
+    </LeagueStateContext.Provider>
+  )
 }
