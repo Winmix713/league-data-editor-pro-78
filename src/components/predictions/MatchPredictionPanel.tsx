@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { PredictionResult } from "./PredictionResult"
 import { getPrediction } from "@/services/api"
-import { PredictionResult as PredictionResultType } from "@/types/api"
+import { PredictionResultType } from "@/types/api"
 import { Loader2 } from "lucide-react"
 import { TEAMS } from "@/data/teams"
 
