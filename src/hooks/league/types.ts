@@ -1,19 +1,5 @@
 
-import type { LeagueData, Match } from "@/types"
-
-export type RouteType = 
-  | "leagues" 
-  | "league-details" 
-  | "analysis" 
-  | "advanced-pattern" 
-  | "integrations"
-  | "league-analytics" 
-  | "league-management" 
-  | "matches"
-  | "settings"
-  | "predictions"
-  | "team-management"
-  | "statistics"
+import type { LeagueData, Match, RouteType } from "@/types"
 
 export interface RouteHistoryItem {
   route: RouteType

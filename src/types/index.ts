@@ -6,8 +6,10 @@ export interface LeagueData {
   winner: string
   secondPlace: string
   thirdPlace: string
-  status: string
+  status: LeagueStatus
 }
+
+export type LeagueStatus = "In Progress" | "Completed"
 
 export interface Match {
   id?: string
@@ -31,9 +33,14 @@ export type RouteType =
   | "league-analytics"
   | "league-management"
   | "matches"
+  | "settings"
+  | "predictions"
+  | "team-management"
+  | "statistics"
 
 export interface RouteHistoryItem {
   route: RouteType
   leagueId?: string
   matchId?: string
+  tab?: string
 }

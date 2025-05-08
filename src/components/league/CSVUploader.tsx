@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
 import { parseMatchesCSV } from "@/utils/csvParser"
-import { CSVInstructions } from "./CSVInstructions"
+import CSVInstructions from "../matches/CSVInstructions"
 import type { Match } from "@/types"
+import logger from "@/utils/logger"
 
 interface CSVUploaderProps {
   onMatchesUpdate: (matches: Match[]) => void
@@ -37,6 +38,7 @@ export const CSVUploader = memo(({ onMatchesUpdate, onDataLoaded }: CSVUploaderP
       onDataLoaded(true)
       toast.success(`${parsedMatches.length} matches imported successfully`)
     } catch (error) {
+      logger.error("CSV upload error:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to process CSV file"
       setImportError(errorMessage)
       toast.error(errorMessage)
