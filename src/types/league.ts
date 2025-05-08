@@ -1,32 +1,46 @@
-
-import type { Match, LeagueData } from "./index"
-
-export type LeagueStatus = "In Progress" | "Completed"
-
-export interface LeagueFilters {
-  season?: string
-  status?: LeagueStatus
-  search?: string
+export interface LeagueData {
+  id: string;
+  name: string;
+  season: string;
+  teams: Team[];
+  matches: Match[];
+  settings?: LeagueSettings;
 }
 
-export interface LeagueMetadata {
-  createdAt: string
-  updatedAt: string
-  totalMatches: number
-  completedMatches: number
+export interface LeagueSettings {
+  pointsForWin: number;
+  pointsForDraw: number;
+  pointsForLoss: number;
+  useGoalDifference: boolean;
 }
 
-export interface EnhancedLeagueData extends LeagueData {
-  metadata?: LeagueMetadata
-  description?: string
+export interface Team {
+  id: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+}
+typescript// src/types/match.ts
+export interface Match {
+  id: string;
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  date: string;
+  played: boolean;
+  venue?: string;
+  referee?: string;
 }
 
-export interface LeagueStats {
-  totalGoals: number
-  averageGoalsPerMatch: number
-  homeWins: number
-  awayWins: number
-  draws: number
-  mostGoalsScoredInMatch: number
-  cleanSheets: number
+export interface StandingsEntry {
+  team: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
 }
