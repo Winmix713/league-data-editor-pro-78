@@ -1,6 +1,6 @@
-
 import { ApiResponse } from "../types/api";
 import { API_CONFIG, getApiUrl } from "../config/api";
+import { TEAMS, getAllTeamNames } from "../data/teams";
 
 // Simple in-memory cache
 interface CacheItem {
@@ -74,8 +74,8 @@ export async function getMatches(params: Record<string, string> = {}): Promise<A
  */
 export async function getTeams(): Promise<string[]> {
   try {
-    const response = await getMatches();
-    return response.teams || [];
+    // Instead of fetching from API, use our local team data
+    return getAllTeamNames();
   } catch (error) {
     console.error("Failed to fetch teams:", error);
     return [];

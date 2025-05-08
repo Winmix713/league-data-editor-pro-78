@@ -1,10 +1,10 @@
-
 import { memo } from "react"
 import { BarChart3, Calendar, Plus, Settings, Trophy, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLeagueState } from "@/hooks/league"
+import { TeamList } from "@/components/teams/TeamList" 
 
 interface FeatureCardProps {
   title: string
@@ -67,10 +67,10 @@ export const LeagueManagementView = memo(() => {
             My Leagues
           </TabsTrigger>
           <TabsTrigger
-            value="analytics"
+            value="teams"
             className="py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-black/20"
           >
-            Analytics
+            Teams
           </TabsTrigger>
           <TabsTrigger
             value="settings"
@@ -114,7 +114,7 @@ export const LeagueManagementView = memo(() => {
                     </div>
                     <div>
                       <h4 className="text-gray-400 text-sm">Teams</h4>
-                      <p className="text-2xl font-bold text-white">52</p>
+                      <p className="text-2xl font-bold text-white">{TEAMS.length}</p>
                     </div>
                   </div>
 
@@ -187,18 +187,9 @@ export const LeagueManagementView = memo(() => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="analytics" className="mt-6">
-          <Card className="bg-black/20 border-white/5">
-            <CardHeader>
-              <CardTitle className="text-white">League Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-gray-400 py-12">
-                League analytics will be available once leagues and match data are created.
-              </p>
-            </CardContent>
-          </Card>
+        
+        <TabsContent value="teams" className="mt-6">
+          <TeamList />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-6">

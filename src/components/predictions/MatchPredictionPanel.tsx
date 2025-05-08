@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { PredictionResult } from "./PredictionResult"
-import { getTeams, getPrediction } from "@/services/api"
+import { getPrediction } from "@/services/api"
 import { PredictionResult as PredictionResultType } from "@/types/api"
 import { Loader2 } from "lucide-react"
+import { TEAMS } from "@/data/teams"
 
 interface MatchPredictionPanelProps {
   matches: any[]
@@ -15,27 +16,12 @@ interface MatchPredictionPanelProps {
 export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
   const [homeTeam, setHomeTeam] = useState<string>("")
   const [awayTeam, setAwayTeam] = useState<string>("")
-  const [teams, setTeams] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [prediction, setPrediction] = useState<PredictionResultType | null>(null)
-  const [isLoadingTeams, setIsLoadingTeams] = useState(true)
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   
-  // Load teams from API
-  useEffect(() => {
-    const fetchTeams = async () => {
-      setIsLoadingTeams(true)
-      try {
-        const teamsList = await getTeams()
-        setTeams(teamsList.length > 0 ? teamsList.sort() : [])
-      } catch (error) {
-        console.error("Failed to load teams:", error)
-      } finally {
-        setIsLoadingTeams(false)
-      }
-    }
-    
-    fetchTeams()
-  }, [])
+  // Sort teams by name
+  const sortedTeams = TEAMS.sort((a, b) => a.name.localeCompare(b.name))
   
   const handlePredict = async () => {
     if (homeTeam && awayTeam) {
@@ -63,21 +49,14 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm text-gray-400">Home Team</label>
-            <Select value={homeTeam} onValueChange={setHomeTeam} disabled={isLoadingTeams}>
+            <Select value={homeTeam} onValueChange={setHomeTeam}>
               <SelectTrigger className="w-full bg-black/30 border-white/10 text-white">
-                {isLoadingTeams ? (
-                  <div className="flex items-center">
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading teams...
-                  </div>
-                ) : (
-                  <SelectValue placeholder="Select Home Team" />
-                )}
+                <SelectValue placeholder="Select Home Team" />
               </SelectTrigger>
               <SelectContent>
-                {teams.map((team) => (
-                  <SelectItem key={`home-${team}`} value={team}>
-                    {team}
+                {sortedTeams.map((team) => (
+                  <SelectItem key={`home-${team.id}`} value={team.name}>
+                    {team.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -86,21 +65,14 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
           
           <div className="space-y-2">
             <label className="text-sm text-gray-400">Away Team</label>
-            <Select value={awayTeam} onValueChange={setAwayTeam} disabled={isLoadingTeams}>
+            <Select value={awayTeam} onValueChange={setAwayTeam}>
               <SelectTrigger className="w-full bg-black/30 border-white/10 text-white">
-                {isLoadingTeams ? (
-                  <div className="flex items-center">
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading teams...
-                  </div>
-                ) : (
-                  <SelectValue placeholder="Select Away Team" />
-                )}
+                <SelectValue placeholder="Select Away Team" />
               </SelectTrigger>
               <SelectContent>
-                {teams.map((team) => (
-                  <SelectItem key={`away-${team}`} value={team}>
-                    {team}
+                {sortedTeams.map((team) => (
+                  <SelectItem key={`away-${team.id}`} value={team.name}>
+                    {team.name}
                   </SelectItem>
                 ))}
               </SelectContent>

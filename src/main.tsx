@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom"
 import App from "./App"
 import "./index.css"
 import { LeagueStateProvider } from "./hooks/league/LeagueStateContext"
+import "./data/teams" // Import teams data to ensure it's loaded
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
