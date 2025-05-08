@@ -1,7 +1,8 @@
-import type { LeagueData, Match } from "@/types"
+
+import type { LeagueData, Match, RouteType } from "@/types"
 
 export interface RouteHistoryItem {
-  route: string
+  route: RouteType
   leagueId?: string
   matchId?: string
   tab?: string
@@ -9,13 +10,13 @@ export interface RouteHistoryItem {
 
 export interface LeagueState {
   // Navigation state
-  currentRoute: string
+  currentRoute: RouteType
   selectedLeagueId: string | null
   selectedMatchId: string | null
   selectedTab: string | null
   
   // Navigation actions
-  navigate: (route: string, params?: { leagueId?: string; matchId?: string; tab?: string }) => void
+  navigate: (route: RouteType, params?: { leagueId?: string; matchId?: string; tab?: string }) => void
   goBack: () => void
   resetNavigation: () => void
   
