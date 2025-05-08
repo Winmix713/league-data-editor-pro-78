@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getPrediction } from "@/services/api"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import { HeadToHeadStats, TeamAnalysis } from "@/types/api"
+import { ExtendedTeamAnalysis } from "@/types/api"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface HeadToHeadViewProps {
@@ -14,7 +14,7 @@ interface HeadToHeadViewProps {
 
 export const HeadToHeadView = ({ homeTeam, awayTeam }: HeadToHeadViewProps) => {
   const [loading, setLoading] = useState(true)
-  const [teamAnalysis, setTeamAnalysis] = useState<TeamAnalysis | null>(null)
+  const [teamAnalysis, setTeamAnalysis] = useState<ExtendedTeamAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -22,7 +22,14 @@ export const HeadToHeadView = ({ homeTeam, awayTeam }: HeadToHeadViewProps) => {
       try {
         setLoading(true)
         const response = await getPrediction(homeTeam, awayTeam)
-        setTeamAnalysis(response.team_analysis || null)
+        
+        // Extract the specific team analysis for the home team (or away team if home not available)
+        if (response.team_analysis && (response.team_analysis[homeTeam] || response.team_analysis[awayTeam])) {
+          setTeamAnalysis(response.team_analysis[homeTeam] || response.team_analysis[awayTeam])
+        } else {
+          setTeamAnalysis(null)
+        }
+        
         setLoading(false)
       } catch (err) {
         setError("Failed to load head-to-head data")

@@ -11,6 +11,22 @@ export interface Match {
   venue?: string
 }
 
+export interface HeadToHeadStats {
+  home_wins: number
+  away_wins: number
+  draws: number
+  home_win_percentage: number
+  away_win_percentage: number
+  draw_percentage: number
+  total_matches: number
+}
+
+export interface AverageGoals {
+  average_home_goals: number
+  average_away_goals: number
+  average_total_goals: number
+}
+
 export interface TeamAnalysis {
   team: string
   wins: number
@@ -20,6 +36,14 @@ export interface TeamAnalysis {
   goalsConceded: number
   cleanSheets: number
   form: string[]
+}
+
+export interface ExtendedTeamAnalysis extends TeamAnalysis {
+  head_to_head_stats: HeadToHeadStats
+  both_teams_scored_percentage: number
+  average_goals: AverageGoals
+  home_form_index: number
+  away_form_index: number
 }
 
 export interface PredictionResultType {
@@ -41,7 +65,7 @@ export interface ApiResponse {
   page_size: number
   matches: Match[]
   team_analysis?: {
-    [team: string]: TeamAnalysis
+    [team: string]: ExtendedTeamAnalysis
   } | null
   prediction?: PredictionResultType | null
 }
