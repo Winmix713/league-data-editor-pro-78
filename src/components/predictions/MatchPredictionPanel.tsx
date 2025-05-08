@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { PredictionResult } from "./PredictionResult"
 import { getPrediction } from "@/services/api"
 import { PredictionResultType } from "@/types/api"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle, Info } from "lucide-react"
 import { TEAMS } from "@/data/teams"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,6 +23,7 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [prediction, setPrediction] = useState<PredictionResultType | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isPredictionLocal, setIsPredictionLocal] = useState<boolean>(false)
   const [selectedPredictionType, setSelectedPredictionType] = useState<string>("standard")
   const [recentTeams, setRecentTeams] = useState<{home: string[], away: string[]}>({
     home: [],
@@ -78,6 +79,7 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
       
       setError(null)
       setIsLoading(true)
+      setIsPredictionLocal(false)
       
       try {
         // Save selected teams to recent lists
@@ -87,11 +89,21 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
         const result = await getPrediction(homeTeam, awayTeam)
         setPrediction(result.prediction || null)
         
+        // Check if this is a local prediction (no team_analysis means it's local)
+        setIsPredictionLocal(!result.team_analysis && !!result.prediction)
+        
         if (result.prediction) {
-          toast.success("Prediction generated successfully")
+          if (!result.team_analysis) {
+            // Show toast for local prediction
+            toast.success("Prediction generated using local data", {
+              description: "External API unavailable. Using your match history."
+            })
+          } else {
+            toast.success("Prediction generated successfully")
+          }
         } else {
           toast.error("Could not generate prediction with available data")
-          setError("Insufficient data to generate a reliable prediction")
+          setError("Insufficient data to generate a reliable prediction. Try adding more match data for these teams.")
         }
       } catch (error) {
         console.error("Prediction error:", error)
@@ -272,10 +284,19 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
         
         {prediction && (
           <div className="mt-6 animate-fadeIn">
+            {isPredictionLocal && (
+              <Alert className="mb-4 bg-blue-500/20 border-blue-500/30">
+                <Info className="h-4 w-4 text-blue-400" />
+                <AlertDescription className="text-blue-100">
+                  Using local prediction engine. External data unavailable.
+                </AlertDescription>
+              </Alert>
+            )}
             <PredictionResult 
               homeTeam={homeTeam}
               awayTeam={awayTeam}
               prediction={prediction}
+              isLocalPrediction={isPredictionLocal}
             />
           </div>
         )}

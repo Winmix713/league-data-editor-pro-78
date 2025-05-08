@@ -4,14 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { PredictionResultType } from "@/types/api"
+import { Info } from "lucide-react"
 
 interface PredictionResultProps {
   homeTeam: string
   awayTeam: string
   prediction: PredictionResultType
+  isLocalPrediction?: boolean
 }
 
-export function PredictionResult({ homeTeam, awayTeam, prediction }: PredictionResultProps) {
+export function PredictionResult({ homeTeam, awayTeam, prediction, isLocalPrediction = false }: PredictionResultProps) {
   // Default values if prediction doesn't have these properties
   const homeScore = prediction.homeScore || 0
   const awayScore = prediction.awayScore || 0
@@ -54,6 +56,11 @@ export function PredictionResult({ homeTeam, awayTeam, prediction }: PredictionR
       ? "bg-amber-500"
       : "bg-red-500"
   
+  // Get win probabilities
+  const homeWinProb = prediction.homeWinProbability !== undefined ? prediction.homeWinProbability : (outcome === 'home' ? 70 : 20)
+  const awayWinProb = prediction.awayWinProbability !== undefined ? prediction.awayWinProbability : (outcome === 'away' ? 70 : 20)
+  const drawProb = prediction.drawProbability !== undefined ? prediction.drawProbability : (outcome === 'draw' ? 70 : 10)
+  
   return (
     <Card className="bg-black/30 border-white/10 overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -95,7 +102,10 @@ export function PredictionResult({ homeTeam, awayTeam, prediction }: PredictionR
         <div className="space-y-2 pt-4">
           <div className="flex justify-between">
             <span className="text-sm text-gray-400">Prediction Confidence</span>
-            <span className={`text-sm font-medium ${confidenceLevel.color}`}>{confidenceLevel.text}</span>
+            <span className={`text-sm font-medium ${confidenceLevel.color}`}>
+              {confidenceLevel.text}
+              {isLocalPrediction && " (Local)"}
+            </span>
           </div>
           <Progress value={confidence} className="h-2 bg-white/10" indicatorClassName={progressColor} />
         </div>
@@ -105,26 +115,36 @@ export function PredictionResult({ homeTeam, awayTeam, prediction }: PredictionR
           <div className="bg-black/20 p-3 rounded-lg border border-white/5">
             <p className="text-xs text-gray-400 mb-1">Expected Goals</p>
             <p className="font-medium">
-              <span className={outcomeStyles.home.text}>{homeTeam}: {(homeScore + 0.35).toFixed(2)}</span> | <span className={outcomeStyles.away.text}>{awayTeam}: {(awayScore + 0.12).toFixed(2)}</span>
+              <span className={outcomeStyles.home.text}>
+                {homeTeam}: {prediction.expectedGoalsHome?.toFixed(2) || (homeScore + 0.35).toFixed(2)}
+              </span> | <span className={outcomeStyles.away.text}>
+                {awayTeam}: {prediction.expectedGoalsAway?.toFixed(2) || (awayScore + 0.12).toFixed(2)}
+              </span>
             </p>
           </div>
           
           <div className="bg-black/20 p-3 rounded-lg border border-white/5">
             <p className="text-xs text-gray-400 mb-1">Win Probability</p>
             <p className="font-medium">
-              <span className={outcomeStyles.home.text}>{homeTeam}: {Math.round(confidence * (homeScore > awayScore ? 1 : 0.3))}%</span> | <span className={outcomeStyles.away.text}>{awayTeam}: {Math.round(confidence * (awayScore > homeScore ? 1 : 0.3))}%</span>
+              <span className={outcomeStyles.home.text}>{homeTeam}: {homeWinProb}%</span> | 
+              <span className="text-gray-400 mx-1">Draw: {drawProb}%</span> | 
+              <span className={outcomeStyles.away.text}>{awayTeam}: {awayWinProb}%</span>
             </p>
           </div>
           
           <div className="bg-black/20 p-3 rounded-lg border border-white/5 sm:col-span-2">
             <p className="text-xs text-gray-400 mb-1">Match Analysis</p>
             <p className="text-sm">
-              Based on historical data, we predict a {outcome === "home" ? "home win" : outcome === "away" ? "away win" : "draw"} with {confidenceLevel.text.toLowerCase()}. 
-              {outcome === "home" 
-                ? ` ${homeTeam} has shown strong performance in recent matches.`
-                : outcome === "away"
-                  ? ` ${awayTeam} is expected to perform well in this away fixture.`
-                  : ` Both teams appear evenly matched in our analysis.`
+              {prediction.analysis || 
+                `Based on ${isLocalPrediction ? 'local' : 'historical'} data, we predict a ${
+                  outcome === "home" ? "home win" : outcome === "away" ? "away win" : "draw"
+                } with ${confidenceLevel.text.toLowerCase()}. ${
+                  outcome === "home" 
+                    ? `${homeTeam} has shown strong performance in recent matches.`
+                    : outcome === "away"
+                      ? `${awayTeam} is expected to perform well in this away fixture.`
+                      : `Both teams appear evenly matched in our analysis.`
+                }`
               }
             </p>
           </div>
