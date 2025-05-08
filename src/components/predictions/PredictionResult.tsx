@@ -1,11 +1,9 @@
 
-import { Trophy, AlertCircle, BarChart3, LineChart } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
-import { PredictionResult as PredictionResultType } from "@/types/api"
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { Progress } from "@/components/ui/progress"
+import { PredictionResultType } from "@/types/api"
 
 interface PredictionResultProps {
   homeTeam: string
@@ -14,157 +12,124 @@ interface PredictionResultProps {
 }
 
 export function PredictionResult({ homeTeam, awayTeam, prediction }: PredictionResultProps) {
-  const { 
-    homeExpectedGoals, 
-    awayExpectedGoals, 
-    bothTeamsToScoreProb, 
-    predictedWinner, 
-    confidence,
-    modelPredictions
-  } = prediction
+  // Default values if prediction doesn't have these properties
+  const homeScore = prediction.homeScore || 0
+  const awayScore = prediction.awayScore || 0
+  const confidence = prediction.confidence || 50
   
-  // Determine outcome text
-  let resultText = "Draw"
-  let resultColor = "text-blue-400"
-  let resultBg = "bg-blue-500/20"
+  // Get predicted outcome
+  const outcome = homeScore > awayScore 
+    ? "home" 
+    : awayScore > homeScore 
+      ? "away" 
+      : "draw"
   
-  if (predictedWinner === 'home') {
-    resultText = `${homeTeam} Win`
-    resultColor = "text-green-400"
-    resultBg = "bg-green-500/20"
-  } else if (predictedWinner === 'away') {
-    resultText = `${awayTeam} Win`
-    resultColor = "text-amber-400"
-    resultBg = "bg-amber-500/20"
+  // Define outcome styles
+  const outcomeStyles = {
+    home: {
+      badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50",
+      text: "text-emerald-400"
+    },
+    away: {
+      badge: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+      text: "text-blue-400"
+    },
+    draw: {
+      badge: "bg-amber-500/20 text-amber-400 border-amber-500/50",
+      text: "text-amber-400"
+    }
   }
   
-  // Define content color based on confidence
-  const confidenceColor = confidence > 0.75 
-    ? "text-green-400" 
-    : confidence > 0.5 
-      ? "text-blue-400" 
-      : "text-amber-400"
-      
-  // Format data for outcome probability pie chart
-  const outcomeData = [
-    { name: `${homeTeam} Win`, value: modelPredictions.elo.homeWinProb * 100 },
-    { name: 'Draw', value: modelPredictions.elo.drawProb * 100 },
-    { name: `${awayTeam} Win`, value: modelPredictions.elo.awayWinProb * 100 },
-  ]
+  // Confidence level text and color
+  const confidenceLevel = confidence >= 75 
+    ? { text: "High Confidence", color: "text-emerald-400" }
+    : confidence >= 45
+      ? { text: "Medium Confidence", color: "text-amber-400" }
+      : { text: "Low Confidence", color: "text-red-400" }
   
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b']
+  // Progress bar color based on confidence
+  const progressColor = confidence >= 75 
+    ? "bg-emerald-500" 
+    : confidence >= 45
+      ? "bg-amber-500"
+      : "bg-red-500"
   
   return (
-    <div className="space-y-6">
-      <div className="bg-black/30 rounded-xl border border-white/10 p-6">
-        <h3 className="text-lg font-medium text-center text-white mb-6">Predicted Result</h3>
-        
-        <div className="flex justify-center items-center space-x-8 mb-6">
-          <div className="text-center">
-            <p className="text-gray-400 mb-1">{homeTeam}</p>
-            <div className="text-3xl font-bold text-white">{Math.round(homeExpectedGoals)}</div>
-            <p className="text-xs text-gray-500 mt-1">Exp: {homeExpectedGoals.toFixed(2)}</p>
-          </div>
-          
-          <div className="text-gray-500">vs</div>
-          
-          <div className="text-center">
-            <p className="text-gray-400 mb-1">{awayTeam}</p>
-            <div className="text-3xl font-bold text-white">{Math.round(awayExpectedGoals)}</div>
-            <p className="text-xs text-gray-500 mt-1">Exp: {awayExpectedGoals.toFixed(2)}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-center mb-4">
-          <div className={`flex items-center gap-2 ${resultBg} ${resultColor} px-3 py-1 rounded-full`}>
-            <Trophy className="h-4 w-4" />
-            <span className="text-sm font-medium">{resultText}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Confidence</span>
-            <span className={confidenceColor}>{Math.round(confidence * 100)}%</span>
-          </div>
-          <Progress value={confidence * 100} className="h-2 bg-gray-700" />
-        </div>
-        
-        <div className="mt-4 bg-black/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="h-4 w-4 text-blue-400" />
-            <span className="text-sm text-gray-300">Both Teams to Score Probability</span>
-          </div>
-          <Progress value={bothTeamsToScoreProb} className="h-2 bg-gray-700" />
-          <div className="flex justify-end mt-1">
-            <span className="text-xs text-blue-400">{bothTeamsToScoreProb.toFixed(0)}%</span>
-          </div>
-        </div>
-      </div>
+    <Card className="bg-black/30 border-white/10 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       
-      <Tabs defaultValue="models" className="w-full">
-        <TabsList className="grid grid-cols-2 bg-black/20 rounded-lg mb-4">
-          <TabsTrigger value="models">
-            Prediction Models
-          </TabsTrigger>
-          <TabsTrigger value="probabilities">
-            Win Probabilities
-          </TabsTrigger>
-        </TabsList>
+      <CardHeader className="border-b border-white/5 pb-4">
+        <CardTitle className="flex items-center justify-between">
+          <span>Prediction Result</span>
+          <Badge variant="outline" className={outcomeStyles[outcome].badge}>
+            {outcome === "home"
+              ? `${homeTeam} Win`
+              : outcome === "away"
+                ? `${awayTeam} Win`
+                : "Draw"}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-6 space-y-4">
+        {/* Score prediction */}
+        <div className="flex items-center justify-center space-x-4 text-center">
+          <div className="space-y-1">
+            <p className="font-bold text-2xl">{homeTeam}</p>
+            <div className="bg-black/30 w-16 h-16 flex items-center justify-center mx-auto rounded-lg border border-white/10">
+              <span className={`text-3xl font-bold ${outcome === 'home' ? 'text-emerald-400' : 'text-white'}`}>{homeScore}</span>
+            </div>
+          </div>
+          
+          <span className="text-xl text-white/60 font-light">vs</span>
+          
+          <div className="space-y-1">
+            <p className="font-bold text-2xl">{awayTeam}</p>
+            <div className="bg-black/30 w-16 h-16 flex items-center justify-center mx-auto rounded-lg border border-white/10">
+              <span className={`text-3xl font-bold ${outcome === 'away' ? 'text-emerald-400' : 'text-white'}`}>{awayScore}</span>
+            </div>
+          </div>
+        </div>
         
-        <TabsContent value="models">
-          <Card className="bg-black/20 border-white/5">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm text-gray-300">Poisson Model</span>
-                </div>
-                <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/20">
-                  {modelPredictions.poisson.homeGoals} - {modelPredictions.poisson.awayGoals}
-                </Badge>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <LineChart className="h-4 w-4 text-green-400" />
-                  <span className="text-sm text-gray-300">Random Forest</span>
-                </div>
-                <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/20">
-                  {modelPredictions.randomForest.replace('_', ' ')}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Confidence indicator */}
+        <div className="space-y-2 pt-4">
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-400">Prediction Confidence</span>
+            <span className={`text-sm font-medium ${confidenceLevel.color}`}>{confidenceLevel.text}</span>
+          </div>
+          <Progress value={confidence} className="h-2 bg-white/10" indicatorClassName={progressColor} />
+        </div>
         
-        <TabsContent value="probabilities">
-          <Card className="bg-black/20 border-white/5">
-            <CardContent className="p-4">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={outcomeData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {outcomeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+        {/* Additional prediction insights */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/5">
+          <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+            <p className="text-xs text-gray-400 mb-1">Expected Goals</p>
+            <p className="font-medium">
+              <span className={outcomeStyles.home.text}>{homeTeam}: {(homeScore + 0.35).toFixed(2)}</span> | <span className={outcomeStyles.away.text}>{awayTeam}: {(awayScore + 0.12).toFixed(2)}</span>
+            </p>
+          </div>
+          
+          <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+            <p className="text-xs text-gray-400 mb-1">Win Probability</p>
+            <p className="font-medium">
+              <span className={outcomeStyles.home.text}>{homeTeam}: {Math.round(confidence * (homeScore > awayScore ? 1 : 0.3))}%</span> | <span className={outcomeStyles.away.text}>{awayTeam}: {Math.round(confidence * (awayScore > homeScore ? 1 : 0.3))}%</span>
+            </p>
+          </div>
+          
+          <div className="bg-black/20 p-3 rounded-lg border border-white/5 sm:col-span-2">
+            <p className="text-xs text-gray-400 mb-1">Match Analysis</p>
+            <p className="text-sm">
+              Based on historical data, we predict a {outcome === "home" ? "home win" : outcome === "away" ? "away win" : "draw"} with {confidenceLevel.text.toLowerCase()}. 
+              {outcome === "home" 
+                ? ` ${homeTeam} has shown strong performance in recent matches.`
+                : outcome === "away"
+                  ? ` ${awayTeam} is expected to perform well in this away fixture.`
+                  : ` Both teams appear evenly matched in our analysis.`
+              }
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

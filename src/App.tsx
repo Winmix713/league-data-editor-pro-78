@@ -1,17 +1,14 @@
 
-"use client"
-
+import { Routes, Route } from "react-router-dom"
 import Index from "./pages/Index"
-import { useToast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster"
 
-export default function App() {
-  const { toast } = useToast()
-
+function App() {
   return (
-    <>
-      <Index />
-      <Toaster />
-    </>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="*" element={<Index />} />
+    </Routes>
   )
 }
+
+export default App

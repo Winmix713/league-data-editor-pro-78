@@ -1,35 +1,47 @@
 
 /**
- * A simple logger that respects the current environment
- * to avoid logging in production unless necessary
+ * Simple logger utility
  */
-const isProduction = process.env.NODE_ENV === 'production'
-
 export const logger = {
-  log: (message: string, ...args: any[]) => {
-    if (!isProduction) {
-      console.log(message, ...args)
+  log: (...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(...args)
     }
   },
   
-  warn: (message: string, ...args: any[]) => {
-    if (!isProduction) {
-      console.warn(message, ...args)
-    } else {
-      // In production, you might want to log warnings
-      // to a monitoring service
+  error: (...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(...args)
     }
   },
   
-  error: (message: string, ...args: any[]) => {
-    // Always log errors, but in production you might
-    // want to send them to a monitoring service
-    console.error(message, ...args)
+  warn: (...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(...args)
+    }
   },
   
-  info: (message: string, ...args: any[]) => {
-    if (!isProduction) {
-      console.info(message, ...args)
+  info: (...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(...args)
+    }
+  },
+  
+  debug: (...args: any[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(...args)
+    }
+  },
+  
+  group: (label: string) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.group(label)
+    }
+  },
+  
+  groupEnd: () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.groupEnd()
     }
   }
 }

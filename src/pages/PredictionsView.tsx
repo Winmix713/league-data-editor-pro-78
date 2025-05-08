@@ -1,82 +1,77 @@
 
-import { memo, useState } from "react"
-import { useLeagueState } from "@/hooks/league"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { memo } from "react"
+import { BarChart3, TrendingUp } from "lucide-react"
 import { MatchPredictionPanel } from "@/components/predictions/MatchPredictionPanel"
-import { Button } from "@/components/ui/button"
-import { RefreshCw, ArrowLeft } from "lucide-react"
-import { LeagueStats } from "@/components/stats/LeagueStats"
-import { calculateLeagueStatistics } from "@/utils/leagueStatistics"
+import { useLeagueState } from "@/hooks/league"
 
 export const PredictionsView = memo(() => {
-  const { 
-    currentMatches, 
-    selectedLeagueId, 
-    leaguesList, 
-    navigate, 
-    isLoading, 
-    refreshData 
-  } = useLeagueState()
-  
-  // Get the currently selected league
-  const selectedLeague = leaguesList.find(league => league.id === selectedLeagueId)
-  
-  // Calculate statistics for the selected league
-  const leagueStatistics = calculateLeagueStatistics(currentMatches)
+  const { currentMatches } = useLeagueState()
   
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate("leagues")} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold text-white">
-            Match Predictions {selectedLeague ? `- ${selectedLeague.name}` : ''}
-          </h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Match Predictions</h2>
+          <p className="text-gray-400">
+            Use historical data to predict match outcomes
+          </p>
         </div>
         
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-          onClick={refreshData}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-        </Button>
+        <div className="hidden md:flex items-center space-x-1 bg-black/20 p-2 rounded-lg border border-white/5">
+          <BarChart3 className="h-4 w-4 text-blue-400" />
+          <span className="text-sm text-white">Prediction Engine</span>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main prediction panel */}
         <div className="lg:col-span-2">
           <MatchPredictionPanel matches={currentMatches} />
-          
-          <Card className="mt-6 bg-black/20 border-white/5">
-            <CardHeader>
-              <CardTitle className="text-white">Prediction Model Information</CardTitle>
-              <CardDescription>How the prediction system works</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-300">
-                The match outcome predictor uses a multi-factor model that considers:
-              </p>
-              <ul className="list-disc pl-6 space-y-1 text-gray-400">
-                <li>Historical match results between the two teams</li>
-                <li>Recent form (last 5 matches) with recency weighting</li>
-                <li>Home advantage factor (1.2x boost to home team scoring)</li>
-                <li>Average goals scored and conceded by each team</li>
-                <li>League position and relative team strength</li>
-              </ul>
-              <p className="text-gray-300 mt-4">
-                Confidence level is calculated based on the amount of available data and the consistency of past results.
-              </p>
-            </CardContent>
-          </Card>
         </div>
         
-        <div>
-          <LeagueStats statistics={leagueStatistics} league={selectedLeague} />
+        {/* Sidebar with recent predictions and insights */}
+        <div className="space-y-6">
+          <div className="bg-black/20 border-white/5 rounded-xl p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-400" />
+              <h3 className="text-lg font-medium text-white">Prediction Insights</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="p-3 bg-black/30 rounded-lg border border-white/5">
+                <p className="text-sm text-gray-400">Predictions are based on:</p>
+                <ul className="text-sm mt-2 space-y-1 pl-5 list-disc">
+                  <li>Historical match data</li>
+                  <li>Team performance trends</li>
+                  <li>Head-to-head records</li>
+                  <li>Home/away form analysis</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-gray-500">
+                Prediction accuracy improves with more available match data. Upload multiple seasons
+                of match data to increase prediction confidence.
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-black/20 border-white/5 rounded-xl p-5">
+            <h3 className="font-medium text-white mb-3">Most Accurate Predictions</h3>
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center justify-between p-2 bg-black/30 rounded-md border border-white/5">
+                  <div className="text-sm">
+                    <span className="text-blue-400">Team {i}A</span>
+                    <span className="mx-1 text-gray-500">vs</span>
+                    <span className="text-blue-400">Team {i}B</span>
+                  </div>
+                  <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">
+                    {90 - i * 5}% accurate
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

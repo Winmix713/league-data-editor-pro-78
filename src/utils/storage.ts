@@ -1,51 +1,75 @@
 
 /**
- * Checks if the specified storage type is available
+ * Load data from localStorage with fallback
  */
-export const storageAvailable = (type: 'localStorage' | 'sessionStorage'): boolean => {
+export function loadData<T>(key: string, fallback: T): T {
   try {
-    const storage = window[type];
-    const testKey = '__storage_test__';
-    storage.setItem(testKey, testKey);
-    storage.removeItem(testKey);
-    return true;
-  } catch (e) {
-    return false;
+    const savedData = localStorage.getItem(key)
+    if (savedData) {
+      return JSON.parse(savedData) as T
+    }
+  } catch (error) {
+    console.error(`Error loading data for key ${key}:`, error)
   }
-};
+  return fallback
+}
 
 /**
- * Safely saves data to localStorage with error handling
+ * Save data to localStorage
  */
-export const saveData = <T>(key: string, data: T): boolean => {
-  if (!storageAvailable('localStorage')) {
-    console.warn('localStorage is not available');
-    return false;
-  }
-  
+export function saveData(key: string, data: any): boolean {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
-    return true;
+    localStorage.setItem(key, JSON.stringify(data))
+    return true
   } catch (error) {
-    console.error('Error saving to localStorage:', error);
-    return false;
+    console.error(`Error saving data for key ${key}:`, error)
+    return false
   }
-};
+}
 
 /**
- * Safely loads data from localStorage with error handling
+ * Clear data from localStorage
  */
-export const loadData = <T>(key: string, defaultValue: T): T => {
-  if (!storageAvailable('localStorage')) {
-    console.warn('localStorage is not available');
-    return defaultValue;
-  }
-  
+export function clearData(key: string): boolean {
   try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    localStorage.removeItem(key)
+    return true
   } catch (error) {
-    console.error('Error loading from localStorage:', error);
-    return defaultValue;
+    console.error(`Error clearing data for key ${key}:`, error)
+    return false
   }
-};
+}
+
+/**
+ * Get all keys from localStorage with a specific prefix
+ */
+export function getKeysWithPrefix(prefix: string): string[] {
+  const keys: string[] = []
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(prefix)) {
+        keys.push(key)
+      }
+    }
+  } catch (error) {
+    console.error(`Error getting keys with prefix ${prefix}:`, error)
+  }
+  return keys
+}
+
+/**
+ * Clear all data from localStorage with a specific prefix
+ */
+export function clearDataWithPrefix(prefix: string): number {
+  const keys = getKeysWithPrefix(prefix)
+  let deletedCount = 0
+  
+  keys.forEach(key => {
+    if (clearData(key)) {
+      deletedCount++
+    }
+  })
+  
+  return deletedCount
+}

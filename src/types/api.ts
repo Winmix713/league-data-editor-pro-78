@@ -1,74 +1,47 @@
 
-export interface ApiMatch {
-  home_team: string;
-  away_team: string;
-  date: string;
-  score: {
-    home: number;
-    away: number;
-  };
-  ht_score?: {
-    home: number;
-    away: number;
-  };
-  round?: string | number;
-  venue?: string;
-}
-
-export interface HeadToHeadStats {
-  home_wins: number;
-  away_wins: number;
-  draws: number;
-  home_win_percentage: number;
-  away_win_percentage: number;
-  draw_percentage: number;
-}
-
-export interface AverageGoals {
-  average_total_goals: number;
-  average_home_goals: number;
-  average_away_goals: number;
+export interface Match {
+  date: string
+  home_team: string
+  away_team: string
+  home_score: number
+  away_score: number
+  ht_home_score?: number
+  ht_away_score?: number
+  round?: string
+  venue?: string
 }
 
 export interface TeamAnalysis {
-  home_team: string;
-  away_team: string;
-  matches_count: number;
-  both_teams_scored_percentage: number;
-  average_goals: AverageGoals;
-  home_form_index: number;
-  away_form_index: number;
-  head_to_head_stats: HeadToHeadStats;
+  team: string
+  wins: number
+  losses: number
+  draws: number
+  goalsScored: number
+  goalsConceded: number
+  cleanSheets: number
+  form: string[]
 }
 
-export interface PredictionModel {
-  randomForest: string;
-  poisson: {
-    homeGoals: number;
-    awayGoals: number;
-  };
-  elo: {
-    homeWinProb: number;
-    drawProb: number;
-    awayWinProb: number;
-  };
-}
-
-export interface PredictionResult {
-  homeExpectedGoals: number;
-  awayExpectedGoals: number;
-  bothTeamsToScoreProb: number;
-  predictedWinner: 'home' | 'away' | 'draw' | 'unknown';
-  confidence: number;
-  modelPredictions: PredictionModel;
+export interface PredictionResultType {
+  homeScore: number
+  awayScore: number
+  confidence: number
+  homeWinProbability?: number
+  awayWinProbability?: number
+  drawProbability?: number
+  expectedGoalsHome?: number
+  expectedGoalsAway?: number
+  predictedMargin?: number
+  analysis?: string
 }
 
 export interface ApiResponse {
-  total_matches: number;
-  page: number;
-  page_size: number;
-  matches: ApiMatch[];
-  team_analysis?: TeamAnalysis | null;
-  prediction?: PredictionResult | null;
-  teams?: string[];
+  total_matches: number
+  page: number
+  page_size: number
+  matches: Match[]
+  team_analysis?: {
+    [team: string]: TeamAnalysis
+  } | null
+  prediction?: PredictionResultType | null
 }
