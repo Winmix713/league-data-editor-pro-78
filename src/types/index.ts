@@ -42,3 +42,6 @@ export interface RouteHistoryItem {
   matchId?: string
   tab?: string
 }
+export * from './api';
+export * from './league';
+export * from './match';
