@@ -37,7 +37,11 @@ export const MatchDetailView = ({ match, onClose }: MatchDetailViewProps) => {
         </div>
         
         <div className="pb-6 border-b border-white/10">
-          <MatchScore match={match} size="large" />
+          <MatchScore 
+            homeScore={match.home_score} 
+            awayScore={match.away_score} 
+            size="large" 
+          />
         </div>
         
         <div className="space-y-4">

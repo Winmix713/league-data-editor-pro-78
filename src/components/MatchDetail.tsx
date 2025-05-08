@@ -45,7 +45,7 @@ const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
         </DialogHeader>
         
         {view === 'details' ? (
-          <MatchDetailView match={match} />
+          <MatchDetailView match={match} onClose={onClose} />
         ) : (
           <HeadToHeadView homeTeam={match.home_team} awayTeam={match.away_team} />
         )}
