@@ -1,6 +1,6 @@
 
 import { memo } from "react"
-import LeagueEditor from "@/components/LeagueEditor"
+import LeagueEditor from "@/components/league/LeagueEditor"
 
 interface LeagueEditorViewProps {
   onBack: () => void

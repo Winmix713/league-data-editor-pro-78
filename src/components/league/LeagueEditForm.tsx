@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { LeagueFormFields } from "./LeagueFormFields"
 import { CSVUploader } from "./CSVUploader"
+import { logger } from "@/utils/logger"
 
 interface LeagueEditFormProps {
   league: LeagueData
@@ -18,6 +19,9 @@ interface FormErrors {
   name?: string
   season?: string
   status?: string
+  winner?: string
+  secondPlace?: string
+  thirdPlace?: string
 }
 
 export const LeagueEditForm = ({
@@ -61,11 +65,12 @@ export const LeagueEditForm = ({
     setErrors(newErrors)
     
     // Enable save if there are changes and no errors
-    setIsSaveDisabled(!hasChanges && !dataLoaded || Object.keys(newErrors).length > 0)
+    setIsSaveDisabled((!hasChanges && !dataLoaded) || Object.keys(newErrors).length > 0)
   }, [editedLeague, dataLoaded, league])
 
   const handleLeagueChange = useCallback((updatedLeague: LeagueData) => {
     setEditedLeague(updatedLeague)
+    logger.log("League form updated:", updatedLeague)
   }, [])
 
   const handleSave = useCallback(() => {
