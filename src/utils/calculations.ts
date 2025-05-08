@@ -1,186 +1,115 @@
 
-import { z } from "zod"
+import { useMemo } from 'react';
+import { Match, StandingsEntry, Team } from '@/types';
 
-export const matchSchema = z.object({
-  home_team: z.string(),
-  away_team: z.string(),
-  home_score: z.number().int().min(0),
-  away_score: z.number().int().min(0),
-})
+/**
+ * League stats calculator class
+ */
+class LeagueStatsCalculator {
+  private matches: Match[];
+  private teamStats: Map<string, StandingsEntry>;
 
-export type Match = z.infer<typeof matchSchema>
-
-export interface StandingsEntry {
-  position: number
-  team: string
-  played: number
-  won: number
-  drawn: number
-  lost: number
-  goalsFor: number
-  goalsAgainst: number
-  goalDifference: number
-  points: number
-  form: Array<"W" | "D" | "L">
-  previousPosition?: number
-}
-
-export interface TeamForm {
-  position: number
-  team: string
-  played: number
-  goalsFor: number
-  goalsAgainst: number
-  goalDifference: number
-  points: number
-  form: Array<"W" | "D" | "L">
-}
-
-interface TeamStats extends Omit<StandingsEntry, "position" | "previousPosition"> {}
-
-const createInitialTeamStats = (team: string): TeamStats => ({
-  team,
-  played: 0,
-  won: 0,
-  drawn: 0,
-  lost: 0,
-  goalsFor: 0,
-  goalsAgainst: 0,
-  goalDifference: 0,
-  points: 0,
-  form: [],
-})
-
-const MAX_FORM_ENTRIES = 5
-
-export class LeagueStatsCalculator {
-  private teamStats: Map<string, TeamStats>
-
-  constructor(private matches: Match[]) {
-    this.teamStats = new Map()
-    this.processMatches()
+  constructor(matches: Match[]) {
+    this.matches = matches;
+    this.teamStats = new Map<string, StandingsEntry>();
+    this.calculateStats();
   }
 
-  private ensureTeamExists(team: string): void {
-    if (!this.teamStats.has(team)) {
-      this.teamStats.set(team, createInitialTeamStats(team))
-    }
-  }
-
-  private updateTeamStats(team: string, goalsFor: number, goalsAgainst: number, result: "W" | "D" | "L"): void {
-    const stats = this.teamStats.get(team)!
-    stats.played++
-    stats.goalsFor += goalsFor
-    stats.goalsAgainst += goalsAgainst
-    stats.goalDifference = stats.goalsFor - stats.goalsAgainst
-
-    switch (result) {
-      case "W":
-        stats.won++
-        stats.points += 3
-        break
-      case "D":
-        stats.drawn++
-        stats.points++
-        break
-      case "L":
-        stats.lost++
-        break
-    }
-
-    stats.form.push(result)
-    if (stats.form.length > MAX_FORM_ENTRIES) {
-      stats.form = stats.form.slice(-MAX_FORM_ENTRIES)
-    }
-  }
-
-  private processMatches(): void {
+  private calculateStats(): void {
+    // Process each match and update stats
     for (const match of this.matches) {
-      try {
-        matchSchema.parse(match)
-
-        const { home_team, away_team, home_score, away_score } = match
-        this.ensureTeamExists(home_team)
-        this.ensureTeamExists(away_team)
-
-        if (home_score > away_score) {
-          this.updateTeamStats(home_team, home_score, away_score, "W")
-          this.updateTeamStats(away_team, away_score, home_score, "L")
-        } else if (home_score < away_score) {
-          this.updateTeamStats(home_team, home_score, away_score, "L")
-          this.updateTeamStats(away_team, away_score, home_score, "W")
-        } else {
-          this.updateTeamStats(home_team, home_score, away_score, "D")
-          this.updateTeamStats(away_team, away_score, home_score, "D")
-        }
-      } catch (error) {
-        console.error("Invalid match data:", error)
-        continue
-      }
+      this.processMatch(match);
     }
   }
 
-  private sortTeams<T extends { points: number; goalDifference: number; goalsFor: number; team: string }>(
-    teams: T[],
-  ): T[] {
-    return teams.sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points
-      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference
-      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor
-      return a.team.localeCompare(b.team) // Alphabetical as final tiebreaker
-    })
+  private processMatch(match: Match): void {
+    // Get or initialize home team stats
+    const homeTeam = this.getOrCreateTeamStats(match.home_team);
+    // Get or initialize away team stats
+    const awayTeam = this.getOrCreateTeamStats(match.away_team);
+
+    // Update played games
+    homeTeam.played += 1;
+    awayTeam.played += 1;
+
+    // Update goals
+    homeTeam.goalsFor += match.home_score;
+    homeTeam.goalsAgainst += match.away_score;
+    awayTeam.goalsFor += match.away_score;
+    awayTeam.goalsAgainst += match.home_score;
+
+    // Update win/draw/loss and points
+    if (match.home_score > match.away_score) {
+      // Home team won
+      homeTeam.won += 1;
+      homeTeam.points += 3;
+      awayTeam.lost += 1;
+    } else if (match.home_score < match.away_score) {
+      // Away team won
+      awayTeam.won += 1;
+      awayTeam.points += 3;
+      homeTeam.lost += 1;
+    } else {
+      // Draw
+      homeTeam.drawn += 1;
+      homeTeam.points += 1;
+      awayTeam.drawn += 1;
+      awayTeam.points += 1;
+    }
+
+    // Update goal difference
+    homeTeam.goalDifference = homeTeam.goalsFor - homeTeam.goalsAgainst;
+    awayTeam.goalDifference = awayTeam.goalsFor - awayTeam.goalsAgainst;
+  }
+
+  private getOrCreateTeamStats(teamName: string): StandingsEntry {
+    if (!this.teamStats.has(teamName)) {
+      this.teamStats.set(teamName, {
+        team: teamName,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        points: 0
+      });
+    }
+    return this.teamStats.get(teamName)!;
   }
 
   public getStandings(): StandingsEntry[] {
-    if (this.teamStats.size === 0) return []
-
-    const previousStandings = new Map(
-      Array.from(this.teamStats.entries()).map(([team, stats], index) => [team, { ...stats, position: index + 1 }]),
-    )
-
-    const currentStandings = this.sortTeams(Array.from(this.teamStats.values())).map((stats, index) => ({
-      ...stats,
-      position: index + 1,
-      previousPosition: previousStandings.get(stats.team)?.position,
-    }))
-
-    return currentStandings
-  }
-
-  public getTeamForms(): TeamForm[] {
-    if (this.teamStats.size === 0) return []
-
-    const teamStats = Array.from(this.teamStats.values()).map((stats) => ({
-      position: 0, // Will be set after sorting
-      team: stats.team,
-      played: stats.played,
-      goalsFor: stats.goalsFor,
-      goalsAgainst: stats.goalsAgainst,
-      goalDifference: stats.goalDifference,
-      points: stats.points,
-      form: [...stats.form],
-    }))
-
-    // Use the sortTeams method to sort the team forms and then map to assign positions
-    return this.sortTeams(teamStats).map((form, index) => ({
-      position: index + 1,
-      team: form.team,
-      played: form.played,
-      goalsFor: form.goalsFor,
-      goalsAgainst: form.goalsAgainst,
-      goalDifference: form.goalDifference,
-      points: form.points,
-      form: form.form,
-    }))
+    // Convert Map to array and sort by points (and then goal difference)
+    return Array.from(this.teamStats.values()).sort((a, b) => {
+      if (a.points !== b.points) {
+        return b.points - a.points; // Higher points first
+      }
+      return b.goalDifference - a.goalDifference; // Better goal difference first
+    });
   }
 }
 
-export function calculateStandings(matches: Match[]): StandingsEntry[] {
-  const calculator = new LeagueStatsCalculator(matches)
-  return calculator.getStandings()
-}
+/**
+ * Hook to calculate standings with memoization
+ * @param matches Array of match results
+ * @returns Calculated standings
+ */
+export const useStandings = (matches: Match[]): StandingsEntry[] => {
+  return useMemo(() => {
+    if (!matches.length) return [];
+    const calculator = new LeagueStatsCalculator(matches);
+    return calculator.getStandings();
+  }, [matches]);
+};
 
-export function calculateTeamForms(matches: Match[]): TeamForm[] {
-  const calculator = new LeagueStatsCalculator(matches)
-  return calculator.getTeamForms()
-}
+/**
+ * Memoized function to calculate standings
+ * @param matches Array of match results
+ * @returns Array of standings entries sorted by points and goal difference
+ */
+export const calculateStandings = (matches: Match[]): StandingsEntry[] => {
+  if (!matches.length) return [];
+  const calculator = new LeagueStatsCalculator(matches);
+  return calculator.getStandings();
+};
