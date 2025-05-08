@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLeagueState } from "@/hooks/league"
-import { TeamList } from "@/components/teams/TeamList" 
+import { TeamList } from "@/components/teams/TeamList"
+import { TEAMS } from "@/data/teams" 
 
 interface FeatureCardProps {
   title: string
