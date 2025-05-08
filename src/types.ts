@@ -43,3 +43,29 @@ export interface RouteHistoryItem {
   matchId?: string
   tab?: string
 }
+
+export interface TeamForm {
+  position: number
+  team: string
+  played: number
+  goalsFor: number
+  goalsAgainst: number
+  goalDifference: number
+  points: number
+  form: Array<"W" | "D" | "L">
+}
+
+export interface StandingsEntry {
+  position: number
+  team: string
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  goalsFor: number
+  goalsAgainst: number
+  goalDifference: number
+  points: number
+  form: Array<"W" | "D" | "L">
+  previousPosition?: number
+}

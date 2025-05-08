@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react"
 import { Match } from "@/types"
 import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
@@ -38,9 +37,16 @@ export function useMatchSorting(initialSortConfig?: SortConfig | null) {
       }
       
       if (sortConfig.key === "round") {
-        const roundA = Number(a.round?.replace(/\D/g, '') || 0)
-        const roundB = Number(b.round?.replace(/\D/g, '') || 0)
-        return sortConfig.direction === "asc" ? roundA - roundB : roundB - roundA
+        const extractRoundNumber = (round: string | number | undefined): number => {
+          if (typeof round === 'number') return round;
+          if (!round) return 0;
+          const match = String(round).match(/\d+/);
+          return match ? parseInt(match[0], 10) : 0;
+        };
+        
+        const roundA = extractRoundNumber(a.round);
+        const roundB = extractRoundNumber(b.round);
+        return sortConfig.direction === "asc" ? roundA - roundB : roundB - roundA;
       }
       
       if (sortConfig.key === "goals") {

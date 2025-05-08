@@ -21,7 +21,7 @@ const LeagueStatsDashboard: React.FC<LeagueStatsDashboardProps> = ({ league, mat
     const roundsMap: Record<string, { round: string; totalGoals: number; matches: number }> = {};
     
     matches.forEach(match => {
-      const round = match.round || "Unknown";
+      const round = String(match.round || "Unknown");
       const goals = match.home_score + match.away_score;
       
       if (!roundsMap[round]) {
