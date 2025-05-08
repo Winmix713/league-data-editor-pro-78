@@ -10,7 +10,9 @@ import {
   LayoutGrid, 
   Table, 
   ChevronRight,
-  Trophy 
+  Trophy,
+  LineChart,
+  Cog 
 } from "lucide-react"
 
 export const MobileSidebar = memo(() => {
@@ -61,9 +63,16 @@ export const MobileSidebar = memo(() => {
       description: "External data sources"
     },
     {
+      id: "predictions",
+      label: "Predictions",
+      icon: <LineChart className="h-5 w-5" />,
+      description: "Match predictions",
+      isNew: true
+    },
+    {
       id: "settings",
       label: "Settings",
-      icon: <Settings className="h-5 w-5" />,
+      icon: <Cog className="h-5 w-5" />,
       description: "System configuration"
     }
   ]

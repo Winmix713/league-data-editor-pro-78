@@ -10,6 +10,7 @@ import { LeagueManagementView } from "./league/LeagueManagementView"
 import { LeagueTable } from "@/components/LeagueTable"
 import { MatchesView } from "./MatchesView"
 import { PredictionsView } from "./PredictionsView"
+import { SettingsView } from "./SettingsView"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { Toaster } from "sonner"
 import { NewLeagueModal } from "@/components/NewLeagueModal"
@@ -54,6 +55,56 @@ export default function Index() {
     handleCreateLeague(leagueData);
   };
 
+  // Render the appropriate view based on the current route
+  const renderCurrentView = () => {
+    switch (currentRoute) {
+      case "leagues":
+        return (
+          <LeagueTable
+            leagues={filteredLeagues}
+            onLeagueAction={handleLeagueAction}
+            onSearch={(term) => setSearchTerm(term)}
+            onNewLeague={() => setIsNewLeagueModalOpen(true)}
+          />
+        );
+      case "league-details":
+        return selectedLeagueId && selectedLeague ? (
+          <LeagueDetails 
+            league={selectedLeague}
+            matches={currentMatches}
+            onBack={goBack}
+            onUpdateLeague={handleUpdateLeague}
+            onUpdateMatches={handleUpdateMatches}
+          />
+        ) : (
+          <div>No league selected</div>
+        );
+      case "analysis":
+        return <AnalysisView />;
+      case "advanced-pattern":
+        return <AdvancedPatternView />;
+      case "integrations":
+        return <IntegrationsView />;
+      case "league-analytics":
+        return <LeagueAnalyticsView />;
+      case "league-management":
+        return <LeagueManagementView />;
+      case "matches":
+        return <MatchesView />;
+      case "predictions":
+        return <PredictionsView />;
+      case "settings":
+        return <SettingsView />;
+      default:
+        return <LeagueTable 
+          leagues={filteredLeagues}
+          onLeagueAction={handleLeagueAction}
+          onSearch={(term) => setSearchTerm(term)}
+          onNewLeague={() => setIsNewLeagueModalOpen(true)}
+        />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#101820] text-white">
       <Header currentSeason="2023-2024" />
@@ -69,45 +120,7 @@ export default function Index() {
             <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
 
             <div className="relative p-6">
-              {currentRoute === "leagues" && (
-                <LeagueTable
-                  leagues={filteredLeagues}
-                  onLeagueAction={handleLeagueAction}
-                  onSearch={(term) => setSearchTerm(term)}
-                  onNewLeague={() => setIsNewLeagueModalOpen(true)}
-                />
-              )}
-              {currentRoute === "league-details" && selectedLeagueId && selectedLeague && (
-                <LeagueDetails 
-                  league={selectedLeague}
-                  matches={currentMatches}
-                  onBack={goBack}
-                  onUpdateLeague={handleUpdateLeague}
-                  onUpdateMatches={handleUpdateMatches}
-                />
-              )}
-              {currentRoute === "analysis" && (
-                <AnalysisView />
-              )}
-              {currentRoute === "advanced-pattern" && (
-                <AdvancedPatternView />
-              )}
-              {currentRoute === "integrations" && (
-                <IntegrationsView />
-              )}
-              {currentRoute === "league-analytics" && (
-                <LeagueAnalyticsView />
-              )}
-              {currentRoute === "league-management" && (
-                <LeagueManagementView />
-              )}
-              {currentRoute === "matches" && (
-                <MatchesView />
-              )}
-              {currentRoute === "predictions" && (
-                <PredictionsView />
-              )}
-
+              {renderCurrentView()}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </div>

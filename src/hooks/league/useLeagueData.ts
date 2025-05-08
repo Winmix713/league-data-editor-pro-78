@@ -3,30 +3,32 @@ import { useState, useCallback, useEffect } from "react"
 import { initialLeagues } from "./constants"
 import { v4 as uuidv4 } from 'uuid'
 import type { LeagueData, Match } from "@/types"
+import { loadData, saveData } from "@/utils/storage"
 
 export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) => {
   // Data state
   const [leaguesList, setLeaguesList] = useState<LeagueData[]>(() => {
     // Try to load from localStorage if available
-    const savedLeagues = localStorage.getItem('v-sports-leagues')
-    return savedLeagues ? JSON.parse(savedLeagues) : initialLeagues
+    return loadData<LeagueData[]>('v-sports-leagues', initialLeagues);
   })
+  
   const [currentMatches, setCurrentMatches] = useState<Match[]>(() => {
     // Try to load from localStorage if available
-    const savedMatches = localStorage.getItem('v-sports-current-matches')
-    return savedMatches ? JSON.parse(savedMatches) : []
+    return loadData<Match[]>('v-sports-current-matches', []);
   })
+  
   const [searchTerm, setSearchTerm] = useState("")
   const [isNewLeagueModalOpen, setIsNewLeagueModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Save leagues to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('v-sports-leagues', JSON.stringify(leaguesList))
+    saveData('v-sports-leagues', leaguesList);
   }, [leaguesList])
 
   // Save current matches to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('v-sports-current-matches', JSON.stringify(currentMatches))
+    saveData('v-sports-current-matches', currentMatches);
   }, [currentMatches])
 
   // Data actions
@@ -36,12 +38,8 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
       case "edit":
         setSelectedLeagueId(leagueId)
         // Load matches for the selected league
-        const savedLeagueMatches = localStorage.getItem(`v-sports-matches-${leagueId}`)
-        if (savedLeagueMatches) {
-          setCurrentMatches(JSON.parse(savedLeagueMatches))
-        } else {
-          setCurrentMatches([])
-        }
+        const savedLeagueMatches = loadData<Match[]>(`v-sports-matches-${leagueId}`, []);
+        setCurrentMatches(savedLeagueMatches);
         break
       case "complete":
         setLeaguesList(prev => prev.map(league => 
@@ -59,7 +57,11 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
       case "delete":
         setLeaguesList(prev => prev.filter(league => league.id !== leagueId))
         // Also clean up associated matches in localStorage
-        localStorage.removeItem(`v-sports-matches-${leagueId}`)
+        try {
+          localStorage.removeItem(`v-sports-matches-${leagueId}`)
+        } catch (error) {
+          console.error('Error removing matches from localStorage:', error)
+        }
         break
     }
   }, [setSelectedLeagueId])
@@ -90,9 +92,18 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
     
     // If leagueId is provided, save these matches specifically for that league
     if (leagueId) {
-      localStorage.setItem(`v-sports-matches-${leagueId}`, JSON.stringify(updatedMatches))
+      saveData(`v-sports-matches-${leagueId}`, updatedMatches);
     }
   }, [])
+
+  const refreshData = useCallback(() => {
+    setIsLoading(true);
+    
+    // Simulate data refresh
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+  }, []);
 
   return {
     // Data state
@@ -100,6 +111,7 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
     currentMatches,
     searchTerm,
     isNewLeagueModalOpen,
+    isLoading,
     
     // Data actions
     handleLeagueAction,
@@ -107,6 +119,7 @@ export const useLeagueData = (setSelectedLeagueId: (id: string | null) => void) 
     handleUpdateLeague,
     handleUpdateMatches,
     setSearchTerm,
-    setIsNewLeagueModalOpen
+    setIsNewLeagueModalOpen,
+    refreshData,
   }
 }

@@ -3,6 +3,59 @@ import Papa from "papaparse"
 import { toast } from "sonner"
 import type { Match } from "../types"
 
+/**
+ * Parse a date string in various formats
+ * @param dateStr Date string to parse
+ * @returns Parsed date or throws error if invalid
+ */
+export const parseCSVDate = (dateStr: string): Date => {
+  // Support multiple date formats
+  const formats = [
+    /^(\d{4})-(\d{2})-(\d{2})$/, // YYYY-MM-DD
+    /^(\d{2})\/(\d{2})\/(\d{4})$/, // DD/MM/YYYY
+    /^(\d{2})-(\d{2})-(\d{4})$/ // DD-MM-YYYY
+  ];
+  
+  for (const format of formats) {
+    if (format.test(dateStr)) {
+      // Parse according to detected format
+      const parts = dateStr.match(format);
+      if (!parts) continue;
+      
+      if (format === formats[0]) {
+        // YYYY-MM-DD
+        return new Date(
+          parseInt(parts[1]), 
+          parseInt(parts[2]) - 1, 
+          parseInt(parts[3])
+        );
+      } else {
+        // DD/MM/YYYY or DD-MM-YYYY
+        return new Date(
+          parseInt(parts[3]), 
+          parseInt(parts[2]) - 1, 
+          parseInt(parts[1])
+        );
+      }
+    }
+  }
+  
+  // If just a time like "HH:MM", add today's date
+  if (dateStr.match(/^\d{2}:\d{2}$/)) {
+    const today = new Date();
+    const [hours, minutes] = dateStr.split(':').map(Number);
+    today.setHours(hours, minutes, 0, 0);
+    return today;
+  }
+  
+  // If no format matches, try default Date parsing as fallback
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid date format: ${dateStr}`);
+  }
+  return date;
+};
+
 export const parseMatchesCSV = (file: File): Promise<Match[]> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -14,8 +67,6 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
       },
       complete: (result) => {
         try {
-          console.log("CSV parsing result:", result)
-          
           // Check if parsing had errors
           if (result.errors && result.errors.length > 0) {
             console.error("CSV parsing errors:", result.errors)
@@ -72,8 +123,6 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
             timestampToRound[timestamp] = index + 1
           })
           
-          console.log("Timestamp to round mapping:", timestampToRound)
-          
           const currentYear = new Date().getFullYear()
           const parsedMatches = result.data
             .filter((rawMatch: any) => {
@@ -85,82 +134,89 @@ export const parseMatchesCSV = (file: File): Promise<Match[]> => {
               )
             })
             .map((rawMatch: any, index: number) => {
-              // Format the date - if it's only a time, add today's date
-              let dateValue = typeof rawMatch.date === 'string' 
-                ? rawMatch.date.replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if present
-                : rawMatch.date || ""
-              
-              // Extract time part for round determination
-              let timePart: string | null = null
-              let roundNumber: number | null = null
-              
-              if (dateValue.match(/^\d{2}:\d{2}$/)) {
-                // It's just a time
-                timePart = dateValue
-              } else if (dateValue.match(/\d{2}:\d{2}$/)) {
-                // It contains a timestamp at the end
-                const timeMatch = dateValue.match(/(\d{2}:\d{2})$/)
-                if (timeMatch && timeMatch[1]) {
-                  timePart = timeMatch[1]
+              try {
+                // Format the date - if it's only a time, add today's date
+                let dateValue = typeof rawMatch.date === 'string' 
+                  ? rawMatch.date.replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if present
+                  : rawMatch.date || ""
+                
+                // Extract time part for round determination
+                let timePart: string | null = null
+                let roundNumber: number | null = null
+                
+                if (dateValue.match(/^\d{2}:\d{2}$/)) {
+                  // It's just a time
+                  timePart = dateValue
+                } else if (dateValue.match(/\d{2}:\d{2}$/)) {
+                  // It contains a timestamp at the end
+                  const timeMatch = dateValue.match(/(\d{2}:\d{2})$/)
+                  if (timeMatch && timeMatch[1]) {
+                    timePart = timeMatch[1]
+                  }
                 }
-              }
-              
-              // Determine round based on timestamp
-              if (timePart && timestampToRound[timePart]) {
-                roundNumber = timestampToRound[timePart]
-              } else {
-                // Fallback: calculate round based on index if timestamp not found
-                roundNumber = Math.floor(index / 8) + 1
-              }
-              
-              // If it's just a time, add a synthetic date
-              if (dateValue.match(/^\d{2}:\d{2}$/)) {
-                // Create date based on the round number (each round is a week apart)
-                const syntheticDate = new Date()
-                syntheticDate.setDate(syntheticDate.getDate() + ((roundNumber - 1) * 7)) // One round per week
-                const month = String(syntheticDate.getMonth() + 1).padStart(2, '0')
-                const day = String(syntheticDate.getDate()).padStart(2, '0')
-                dateValue = `${currentYear}-${month}-${day} ${dateValue}`
-              }
-              
-              // Clean data and ensure proper types
-              const homeTeam = typeof rawMatch.home_team === 'string' 
-                ? rawMatch.home_team.replace(/^"(.*)"$/, '$1') 
-                : rawMatch.home_team || ""
-              
-              const awayTeam = typeof rawMatch.away_team === 'string'
-                ? rawMatch.away_team.replace(/^"(.*)"$/, '$1')
-                : rawMatch.away_team || ""
-              
-              // Extract numeric scores, removing quotes if present
-              const extractScore = (value: any): number => {
-                if (typeof value === 'number') return value
-                if (typeof value === 'string') {
-                  const cleanValue = value.replace(/^"(.*)"$/, '$1')
-                  return parseInt(cleanValue, 10) || 0
+                
+                // Determine round based on timestamp
+                if (timePart && timestampToRound[timePart]) {
+                  roundNumber = timestampToRound[timePart]
+                } else {
+                  // Fallback: calculate round based on index if timestamp not found
+                  roundNumber = Math.floor(index / 8) + 1
                 }
-                return 0
-              }
+                
+                // If it's just a time, add a synthetic date
+                if (dateValue.match(/^\d{2}:\d{2}$/)) {
+                  // Create date based on the round number (each round is a week apart)
+                  const syntheticDate = new Date()
+                  syntheticDate.setDate(syntheticDate.getDate() + ((roundNumber - 1) * 7)) // One round per week
+                  const month = String(syntheticDate.getMonth() + 1).padStart(2, '0')
+                  const day = String(syntheticDate.getDate()).padStart(2, '0')
+                  dateValue = `${currentYear}-${month}-${day} ${dateValue}`
+                }
+                
+                // Clean data and ensure proper types
+                const homeTeam = typeof rawMatch.home_team === 'string' 
+                  ? rawMatch.home_team.replace(/^"(.*)"$/, '$1').trim()
+                  : rawMatch.home_team?.toString() || ""
+                
+                const awayTeam = typeof rawMatch.away_team === 'string'
+                  ? rawMatch.away_team.replace(/^"(.*)"$/, '$1').trim()
+                  : rawMatch.away_team?.toString() || ""
+                
+                // Extract numeric scores, removing quotes if present
+                const extractScore = (value: any): number => {
+                  if (typeof value === 'number') return value
+                  if (typeof value === 'string') {
+                    const cleanValue = value.replace(/^"(.*)"$/, '$1')
+                    return parseInt(cleanValue, 10) || 0
+                  }
+                  return 0
+                }
 
-              // Map to our Match format with explicit round string
-              return {
-                date: dateValue,
-                home_team: homeTeam,
-                away_team: awayTeam,
-                ht_home_score: extractScore(rawMatch.ht_home_score),
-                ht_away_score: extractScore(rawMatch.ht_away_score),
-                home_score: extractScore(rawMatch.home_score),
-                away_score: extractScore(rawMatch.away_score),
-                round: `Round ${roundNumber}`,
+                // Map to our Match format with explicit round string
+                return {
+                  date: dateValue,
+                  home_team: homeTeam,
+                  away_team: awayTeam,
+                  ht_home_score: extractScore(rawMatch.ht_home_score),
+                  ht_away_score: extractScore(rawMatch.ht_away_score),
+                  home_score: extractScore(rawMatch.home_score),
+                  away_score: extractScore(rawMatch.away_score),
+                  round: `Round ${roundNumber}`,
+                  venue: rawMatch.venue || undefined
+                }
+              } catch (error) {
+                console.error("Error processing match:", error, rawMatch)
+                return null
               }
             })
+            .filter(Boolean) as Match[] // Remove any null entries from failed processing
 
           if (parsedMatches.length === 0) {
             reject(new Error("No valid matches found in the CSV file. Please check the format."))
             return
           }
 
-          resolve(parsedMatches as Match[])
+          resolve(parsedMatches)
         } catch (error) {
           console.error("Error processing CSV data:", error)
           reject(error)

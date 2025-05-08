@@ -2,7 +2,7 @@
 "use client"
 
 import { memo, useMemo, useState } from "react"
-import type { Match } from "../types"
+import type { Match } from "@/types"
 import { Card, CardContent, CardHeader } from "./ui/card"
 import { MatchesHeader } from "./matches/MatchesHeader"
 import { MatchFilters } from "./matches/MatchFilters"
@@ -10,7 +10,8 @@ import { RoundsView } from "./matches/RoundsView"
 import { TableView } from "./matches/TableView"
 import { CardsView } from "./matches/CardsView"
 import { NoMatchesFound } from "./matches/NoMatchesFound"
-import { useMatchSorting } from "./matches/useMatchSorting"
+import { useMatchSorting } from "@/hooks/useMatchSorting"
+import { logger } from "@/utils/logger"
 
 interface MatchesTableProps {
   matches: Match[]
@@ -22,13 +23,17 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
   const { sortConfig, requestSort, getSortIcon } = useMatchSorting()
 
   const filteredMatches = useMemo(() => {
+    logger.log("Filtering matches with:", filters)
+    
     return matches.filter((match) => {
       const teamMatch = filters.team
         ? match.home_team.toLowerCase().includes(filters.team.toLowerCase()) ||
           match.away_team.toLowerCase().includes(filters.team.toLowerCase())
         : true
 
-      const roundMatch = filters.round ? match.round === filters.round : true
+      const roundMatch = filters.round 
+        ? String(match.round).toLowerCase().includes(filters.round.toLowerCase())
+        : true
 
       let resultMatch = true
       if (filters.result === "home") {
@@ -54,8 +59,16 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
       }
 
       if (sortConfig.key === "round") {
-        const roundA = Number(a.round || 0)
-        const roundB = Number(b.round || 0)
+        // Extract numbers from round strings for proper sorting
+        const extractRoundNumber = (round: string | number | undefined): number => {
+          if (typeof round === 'number') return round
+          if (!round) return 0
+          const match = String(round).match(/\d+/)
+          return match ? parseInt(match[0], 10) : 0
+        }
+        
+        const roundA = extractRoundNumber(a.round)
+        const roundB = extractRoundNumber(b.round)
         return sortConfig.direction === "asc" ? roundA - roundB : roundB - roundA
       }
 
@@ -63,6 +76,18 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
         const goalsA = a.home_score + a.away_score
         const goalsB = b.home_score + b.away_score
         return sortConfig.direction === "asc" ? goalsA - goalsB : goalsB - goalsA
+      }
+
+      if (sortConfig.key === "home_team") {
+        return sortConfig.direction === "asc" 
+          ? a.home_team.localeCompare(b.home_team)
+          : b.home_team.localeCompare(a.home_team)
+      }
+
+      if (sortConfig.key === "away_team") {
+        return sortConfig.direction === "asc" 
+          ? a.away_team.localeCompare(b.away_team)
+          : b.away_team.localeCompare(a.away_team)
       }
 
       return 0
