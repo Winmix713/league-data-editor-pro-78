@@ -1,8 +1,9 @@
+
 import { memo } from "react"
 import type { Match } from "@/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, MapPin, Users, Flag, TrendingUp } from "lucide-react"
+import { Calendar, Clock, MapPin, Users, Whistle, TrendingUp } from "lucide-react"
 
 interface MatchDetailViewProps {
   match: Match
