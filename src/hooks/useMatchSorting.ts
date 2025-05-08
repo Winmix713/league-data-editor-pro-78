@@ -75,13 +75,11 @@ export function useMatchSorting(initialSortConfig?: SortConfig | null) {
   // Create memoized icons for better performance
   const getSortIcon = useCallback((key: SortField) => {
     if (!sortConfig || sortConfig.key !== key) {
-      return <ArrowUpDown className="h-4 w-4 ml-1" />;
+      return React.createElement(ArrowUpDown, { className: "h-4 w-4 ml-1" });
     }
-    return sortConfig.direction === "asc" ? (
-      <ChevronUp className="h-4 w-4 ml-1" />
-    ) : (
-      <ChevronDown className="h-4 w-4 ml-1" />
-    );
+    return sortConfig.direction === "asc" 
+      ? React.createElement(ChevronUp, { className: "h-4 w-4 ml-1" })
+      : React.createElement(ChevronDown, { className: "h-4 w-4 ml-1" });
   }, [sortConfig]);
 
   return {

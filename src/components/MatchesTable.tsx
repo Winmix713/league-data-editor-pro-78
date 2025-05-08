@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom"
 import { useMemo } from "react"
 import { Match } from "@/types"
-import { useMatchSorting, SortField } from "@/components/matches/useMatchSorting"
+import { useMatchSorting, SortField } from "@/hooks/useMatchSorting"
 import { Loader } from "@/components/ui/loader"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
