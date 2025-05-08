@@ -25,7 +25,11 @@ export interface ValidationResult {
 
 export function validateMatch(data: any): ValidationResult {
   try {
-    const match = matchSchema.parse(data);
+    // Explicitly cast the parsed data to Match type to ensure TypeScript understands
+    // that all required fields are present after validation
+    const parsedData = matchSchema.parse(data);
+    const match = parsedData as Match;
+    
     return { 
       valid: true, 
       errors: [], 
