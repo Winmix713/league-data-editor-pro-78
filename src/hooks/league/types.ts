@@ -1,5 +1,13 @@
 
-import type { LeagueData, Match, RouteType, RouteHistoryItem } from "@/types"
+import type { LeagueData, Match } from "@/types"
+
+export type RouteType = "leagues" | "league" | "matches" | "match" | "editor"
+export type RouteHistoryItem = {
+  route: RouteType
+  leagueId?: string
+  matchId?: string
+  tab?: string
+}
 
 export interface LeagueState {
   // Navigation state

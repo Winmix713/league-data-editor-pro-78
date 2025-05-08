@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react"
 import { Match } from "@/types"
 import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
+import React from "react"
 
 export interface SortConfig {
   key: string
@@ -54,7 +55,7 @@ export function useMatchSorting(initialSortConfig?: SortConfig | null) {
       if (sortConfig.key === "away_team") {
         return sortConfig.direction === "asc"
           ? a.away_team.localeCompare(b.away_team)
-          : b.away_team.localeCompare(a.away_team)
+          : b.away_team.localeCompare(a.home_team)
       }
 
       return 0
