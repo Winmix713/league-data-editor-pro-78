@@ -1,35 +1,53 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { predictMatchOutcome } from "@/utils/leagueStatistics"
 import { PredictionResult } from "./PredictionResult"
-import type { Match } from "@/types"
+import { getTeams, getPrediction } from "@/services/api"
+import { PredictionResult as PredictionResultType } from "@/types/api"
+import { Loader2 } from "lucide-react"
 
 interface MatchPredictionPanelProps {
-  matches: Match[]
+  matches: any[]
 }
 
 export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
   const [homeTeam, setHomeTeam] = useState<string>("")
   const [awayTeam, setAwayTeam] = useState<string>("")
-  const [prediction, setPrediction] = useState<{
-    homeScore: number;
-    awayScore: number;
-    confidence: number;
-  } | null>(null)
+  const [teams, setTeams] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [prediction, setPrediction] = useState<PredictionResultType | null>(null)
+  const [isLoadingTeams, setIsLoadingTeams] = useState(true)
   
-  // Extract unique team names from matches
-  const teams = Array.from(new Set([
-    ...matches.map(m => m.home_team),
-    ...matches.map(m => m.away_team)
-  ])).sort()
+  // Load teams from API
+  useEffect(() => {
+    const fetchTeams = async () => {
+      setIsLoadingTeams(true)
+      try {
+        const teamsList = await getTeams()
+        setTeams(teamsList.length > 0 ? teamsList.sort() : [])
+      } catch (error) {
+        console.error("Failed to load teams:", error)
+      } finally {
+        setIsLoadingTeams(false)
+      }
+    }
+    
+    fetchTeams()
+  }, [])
   
-  const handlePredict = () => {
+  const handlePredict = async () => {
     if (homeTeam && awayTeam) {
-      const result = predictMatchOutcome(homeTeam, awayTeam, matches)
-      setPrediction(result)
+      setIsLoading(true)
+      try {
+        const result = await getPrediction(homeTeam, awayTeam)
+        setPrediction(result.prediction || null)
+      } catch (error) {
+        console.error("Prediction error:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
   
@@ -45,9 +63,16 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm text-gray-400">Home Team</label>
-            <Select value={homeTeam} onValueChange={setHomeTeam}>
+            <Select value={homeTeam} onValueChange={setHomeTeam} disabled={isLoadingTeams}>
               <SelectTrigger className="w-full bg-black/30 border-white/10 text-white">
-                <SelectValue placeholder="Select Home Team" />
+                {isLoadingTeams ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading teams...
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select Home Team" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {teams.map((team) => (
@@ -61,9 +86,16 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
           
           <div className="space-y-2">
             <label className="text-sm text-gray-400">Away Team</label>
-            <Select value={awayTeam} onValueChange={setAwayTeam}>
+            <Select value={awayTeam} onValueChange={setAwayTeam} disabled={isLoadingTeams}>
               <SelectTrigger className="w-full bg-black/30 border-white/10 text-white">
-                <SelectValue placeholder="Select Away Team" />
+                {isLoadingTeams ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading teams...
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select Away Team" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {teams.map((team) => (
@@ -78,14 +110,21 @@ export function MatchPredictionPanel({ matches }: MatchPredictionPanelProps) {
         
         <Button 
           onClick={handlePredict} 
-          disabled={!homeTeam || !awayTeam || homeTeam === awayTeam}
+          disabled={!homeTeam || !awayTeam || homeTeam === awayTeam || isLoading}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white"
         >
-          Generate Prediction
+          {isLoading ? (
+            <div className="flex items-center">
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Generating Prediction...
+            </div>
+          ) : (
+            "Generate Prediction"
+          )}
         </Button>
         
         {prediction && (
-          <div className="mt-6 animate-fade-in">
+          <div className="mt-6 animate-fadeIn">
             <PredictionResult 
               homeTeam={homeTeam}
               awayTeam={awayTeam}

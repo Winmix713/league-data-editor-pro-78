@@ -8,6 +8,7 @@ import { MatchesTableView } from "./MatchesTableView"
 import { MatchesByRound } from "./MatchesByRound"
 import { MatchesCardsView } from "./MatchesCardsView"
 import { useMatchFiltering } from "@/hooks/useMatchFiltering"
+import MatchDetail from "../MatchDetail"
 import type { Match } from "@/types"
 
 interface MatchesTableProps {
@@ -17,6 +18,8 @@ interface MatchesTableProps {
 export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
   const [viewType, setViewType] = useState<"rounds" | "all" | "cards">("rounds")
   const { sortedMatches, matchesByRound, setFilters, requestSort, sortConfig } = useMatchFiltering(matches || [])
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -27,6 +30,15 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
     ) : (
       <ChevronDown className="h-4 w-4 ml-1" />
     )
+  }
+  
+  const handleMatchClick = (match: Match) => {
+    setSelectedMatch(match)
+    setIsDetailOpen(true)
+  }
+  
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false)
   }
 
   if (!matches || matches.length === 0) {
@@ -43,32 +55,43 @@ export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
   }
 
   return (
-    <Card className="bg-black/20 border-white/5">
-      <CardHeader className="pb-0">
-        <MatchesHeader
-          viewType={viewType}
-          setViewType={setViewType}
-          requestSort={requestSort}
-          getSortIcon={getSortIcon}
-        />
-      </CardHeader>
-
-      <CardContent className="pt-6">
-        <MatchFilters onFilterChange={setFilters} />
-
-        {viewType === "cards" ? (
-          <MatchesCardsView matches={sortedMatches} />
-        ) : viewType === "rounds" ? (
-          <MatchesByRound matchesByRound={matchesByRound} />
-        ) : (
-          <MatchesTableView
-            matches={sortedMatches}
-            onRequestSort={requestSort}
+    <>
+      <Card className="bg-black/20 border-white/5">
+        <CardHeader className="pb-0">
+          <MatchesHeader
+            viewType={viewType}
+            setViewType={setViewType}
+            requestSort={requestSort}
             getSortIcon={getSortIcon}
           />
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          <MatchFilters onFilterChange={setFilters} />
+
+          {viewType === "cards" ? (
+            <MatchesCardsView matches={sortedMatches} onMatchClick={handleMatchClick} />
+          ) : viewType === "rounds" ? (
+            <MatchesByRound matchesByRound={matchesByRound} onMatchClick={handleMatchClick} />
+          ) : (
+            <MatchesTableView
+              matches={sortedMatches}
+              onRequestSort={requestSort}
+              getSortIcon={getSortIcon}
+              onMatchClick={handleMatchClick}
+            />
+          )}
+        </CardContent>
+      </Card>
+      
+      {selectedMatch && (
+        <MatchDetail 
+          match={selectedMatch} 
+          isOpen={isDetailOpen} 
+          onClose={handleCloseDetail} 
+        />
+      )}
+    </>
   )
 })
 

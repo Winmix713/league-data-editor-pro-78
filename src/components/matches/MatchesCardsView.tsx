@@ -5,9 +5,10 @@ import type { Match } from "@/types"
 
 interface MatchesCardsViewProps {
   matches: Match[]
+  onMatchClick?: (match: Match) => void
 }
 
-export const MatchesCardsView = memo(({ matches }: MatchesCardsViewProps) => {
+export const MatchesCardsView = memo(({ matches, onMatchClick }: MatchesCardsViewProps) => {
   if (matches.length === 0) {
     return (
       <div className="text-center py-12">
@@ -21,7 +22,8 @@ export const MatchesCardsView = memo(({ matches }: MatchesCardsViewProps) => {
       {matches.map((match, index) => (
         <div 
           key={`${match.home_team}-${match.away_team}-${index}`} 
-          className="bg-black/30 border border-white/5 rounded-lg overflow-hidden transition-all hover:bg-black/40"
+          className="bg-black/30 border border-white/5 rounded-lg overflow-hidden transition-all hover:bg-black/40 cursor-pointer"
+          onClick={() => onMatchClick && onMatchClick(match)}
         >
           <div className="p-3 border-b border-white/5 flex justify-between items-center bg-black/20">
             <div className="flex items-center gap-2">
@@ -55,9 +57,9 @@ export const MatchesCardsView = memo(({ matches }: MatchesCardsViewProps) => {
             <span className="text-xs text-gray-500">
               {match.venue || 'Unknown venue'}
             </span>
-            <button className="text-xs text-blue-400 hover:text-blue-300">
-              Details
-            </button>
+            <span className="text-xs text-blue-400 hover:text-blue-300">
+              View Details
+            </span>
           </div>
         </div>
       ))}

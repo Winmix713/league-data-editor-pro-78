@@ -2,6 +2,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Match } from "@/types"
 import { MatchDetailView } from "./matches/MatchDetailView"
+import { Button } from "./ui/button"
+import { useState } from "react"
+import { HeadToHeadView } from "./matches/HeadToHeadView"
 
 interface MatchDetailProps {
   match: Match
@@ -10,6 +13,8 @@ interface MatchDetailProps {
 }
 
 const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
+  const [view, setView] = useState<'details' | 'h2h'>('details')
+  
   if (!match) return null
 
   return (
@@ -19,9 +24,31 @@ const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           <DialogTitle className="text-xl font-semibold flex items-center justify-center">
             Match Details
           </DialogTitle>
+          <div className="flex justify-center mt-4 gap-2">
+            <Button 
+              variant={view === 'details' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setView('details')}
+              className={view === 'details' ? "bg-blue-500" : ""}
+            >
+              Details
+            </Button>
+            <Button 
+              variant={view === 'h2h' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setView('h2h')}
+              className={view === 'h2h' ? "bg-blue-500" : ""}
+            >
+              Head-to-Head
+            </Button>
+          </div>
         </DialogHeader>
         
-        <MatchDetailView match={match} />
+        {view === 'details' ? (
+          <MatchDetailView match={match} />
+        ) : (
+          <HeadToHeadView homeTeam={match.home_team} awayTeam={match.away_team} />
+        )}
       </DialogContent>
     </Dialog>
   )

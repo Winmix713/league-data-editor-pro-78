@@ -6,9 +6,10 @@ import { Calendar, Clock, MapPin } from "lucide-react"
 
 interface MatchesByRoundProps {
   matchesByRound: Record<string, Match[]>
+  onMatchClick?: (match: Match) => void
 }
 
-export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => {
+export const MatchesByRound = memo(({ matchesByRound, onMatchClick }: MatchesByRoundProps) => {
   // Get the round numbers and sort them
   const rounds = Object.keys(matchesByRound || {}).sort((a, b) => {
     // Try to convert to numbers for numeric sorting, handling non-numeric rounds
@@ -85,7 +86,10 @@ export const MatchesByRound = memo(({ matchesByRound }: MatchesByRoundProps) => 
                     <Calendar className="h-3 w-3 mr-1" />
                     {match.date}
                   </span>
-                  <button className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 bg-blue-500/10 px-3 py-1 rounded-full transition-colors">
+                  <button 
+                    className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 bg-blue-500/10 px-3 py-1 rounded-full transition-colors"
+                    onClick={() => onMatchClick && onMatchClick(match)}
+                  >
                     <Clock className="h-3 w-3" />
                     Details
                   </button>
