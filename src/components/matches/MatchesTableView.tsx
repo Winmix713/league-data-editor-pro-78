@@ -1,4 +1,3 @@
-
 import { memo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Match } from "@/types"
@@ -7,9 +6,10 @@ interface MatchesTableViewProps {
   matches: Match[]
   onRequestSort: (key: string) => void
   getSortIcon: (key: string) => JSX.Element
+  onMatchClick?: (match: Match) => void  // Added this prop to fix the error
 }
 
-export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon }: MatchesTableViewProps) => {
+export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon, onMatchClick }: MatchesTableViewProps) => {
   if (matches.length === 0) {
     return (
       <div className="text-center py-12">
@@ -88,7 +88,10 @@ export const MatchesTableView = memo(({ matches, onRequestSort, getSortIcon }: M
                 {`${match.ht_home_score} - ${match.ht_away_score}`}
               </TableCell>
               <TableCell className="text-right">
-                <button className="text-blue-400 hover:text-blue-300 text-sm">
+                <button 
+                  className="text-blue-400 hover:text-blue-300 text-sm"
+                  onClick={() => onMatchClick && onMatchClick(match)}  // Added click handler that uses the new prop
+                >
                   Details
                 </button>
               </TableCell>
