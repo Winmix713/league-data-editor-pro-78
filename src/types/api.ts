@@ -1,71 +1,95 @@
 
-export interface Match {
-  date: string
-  home_team: string
-  away_team: string
-  home_score: number
-  away_score: number
-  ht_home_score?: number
-  ht_away_score?: number
-  round?: string
-  venue?: string
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+  statusCode?: number;
 }
 
-export interface HeadToHeadStats {
-  home_wins: number
-  away_wins: number
-  draws: number
-  home_win_percentage: number
-  away_win_percentage: number
-  draw_percentage: number
-  total_matches: number
+export type ApiResponse<T> = {
+  data: T;
+  success: true;
+} | {
+  error: ApiError;
+  success: false;
+};
+typescript// src/services/api.ts
+
+import { ApiError, ApiResponse } from '@/types/api';
+
+export const handleApiError = (error: unknown): ApiError => {
+  if (error instanceof Error) {
+    return { 
+      code: 'ERROR',
+      message: error.message,
+      details: error
+    };
+  }
+  
+  // Handle Axios errors
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as any;
+    return {
+      code: axiosError.code || 'API_ERROR',
+      message: axiosError.response?.data?.message || 'API request failed',
+      details: axiosError.response?.data,
+      statusCode: axiosError.response?.status
+    };
+  }
+  
+  return { 
+    code: 'UNKNOWN_ERROR',
+    message: 'An unknown error occurred',
+    details: error
+  };
+};
+
+export async function apiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  url: string,
+  data?: any
+): Promise<ApiResponse<T>> {
+  try {
+    // Implementation of fetch/axios request
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        error: {
+          code: `HTTP_${response.status}`,
+          message: errorData.message || `HTTP error ${response.status}`,
+          details: errorData,
+          statusCode: response.status
+        }
+      };
+    }
+    
+    const responseData = await response.json();
+    return {
+      success: true,
+      data: responseData as T
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: handleApiError(error)
+    };
+  }
 }
 
-export interface AverageGoals {
-  average_home_goals: number
-  average_away_goals: number
-  average_total_goals: number
-}
+// Usage examples
+export const getLeagues = async () => {
+  return apiRequest<LeagueData[]>('GET', '/api/leagues');
+};
 
-export interface TeamAnalysis {
-  team: string
-  wins: number
-  losses: number
-  draws: number
-  goalsScored: number
-  goalsConceded: number
-  cleanSheets: number
-  form: string[]
-}
-
-export interface ExtendedTeamAnalysis extends TeamAnalysis {
-  head_to_head_stats: HeadToHeadStats
-  both_teams_scored_percentage: number
-  average_goals: AverageGoals
-  home_form_index: number
-  away_form_index: number
-}
-
-export interface PredictionResultType {
-  homeScore: number
-  awayScore: number
-  confidence: number
-  homeWinProbability?: number
-  awayWinProbability?: number
-  drawProbability?: number
-  expectedGoalsHome?: number
-  expectedGoalsAway?: number
-  predictedMargin?: number
-  analysis?: string
-}
-
-export interface ApiResponse {
-  total_matches: number
-  page: number
-  page_size: number
-  matches: Match[]
-  team_analysis?: {
-    [team: string]: ExtendedTeamAnalysis
-  } | null
-  prediction?: PredictionResultType | null
-}
+export const updateLeague = async (league: LeagueData) => {
+  return apiRequest<LeagueData>('PUT', `/api/leagues/${league.id}`, league);
+};
