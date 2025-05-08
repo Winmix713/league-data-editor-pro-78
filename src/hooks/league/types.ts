@@ -1,7 +1,7 @@
 
 import type { LeagueData, Match } from "@/types"
 
-export type RouteType = "leagues" | "league" | "matches" | "match" | "editor"
+export type RouteType = "leagues" | "league" | "matches" | "match" | "editor" | "league-details" | "analysis" | "advanced-pattern" | "integrations" | "league-analytics" | "league-management" | "predictions" | "settings"
 export type RouteHistoryItem = {
   route: RouteType
   leagueId?: string

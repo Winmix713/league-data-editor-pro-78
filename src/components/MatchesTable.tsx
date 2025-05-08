@@ -1,143 +1,117 @@
-
-"use client"
-
-import { memo, useMemo, useState } from "react"
-import type { Match } from "@/types"
-import { Card, CardContent, CardHeader } from "./ui/card"
-import { MatchesHeader } from "./matches/MatchesHeader"
-import { MatchFilters } from "./matches/MatchFilters"
-import { RoundsView } from "./matches/RoundsView"
-import { TableView } from "./matches/TableView"
-import { CardsView } from "./matches/CardsView"
-import { NoMatchesFound } from "./matches/NoMatchesFound"
-import { useMatchSorting } from "@/hooks/useMatchSorting"
-import { logger } from "@/utils/logger"
+import { useNavigate } from "react-router-dom"
+import { Match } from "@/types"
+import { useMatchSorting } from "@/components/matches/useMatchSorting"
+import { Loader } from "@/components/ui/loader"
 
 interface MatchesTableProps {
   matches: Match[]
+  loading?: boolean
 }
 
-export const MatchesTable = memo(({ matches = [] }: MatchesTableProps) => {
-  const [viewType, setViewType] = useState<"rounds" | "all" | "cards">("rounds")
-  const [filters, setFilters] = useState({ team: "", round: "", result: "" })
-  const { sortConfig, requestSort, getSortIcon } = useMatchSorting()
-
-  const filteredMatches = useMemo(() => {
-    logger.log("Filtering matches with:", filters)
-    
-    return matches.filter((match) => {
-      const teamMatch = filters.team
-        ? match.home_team.toLowerCase().includes(filters.team.toLowerCase()) ||
-          match.away_team.toLowerCase().includes(filters.team.toLowerCase())
-        : true
-
-      const roundMatch = filters.round 
-        ? String(match.round).toLowerCase().includes(filters.round.toLowerCase())
-        : true
-
-      let resultMatch = true
-      if (filters.result === "home") {
-        resultMatch = match.home_score > match.away_score
-      } else if (filters.result === "away") {
-        resultMatch = match.home_score < match.away_score
-      } else if (filters.result === "draw") {
-        resultMatch = match.home_score === match.away_score
-      }
-
-      return teamMatch && roundMatch && resultMatch
-    })
-  }, [matches, filters])
-
-  const sortedMatches = useMemo(() => {
-    if (!sortConfig) return filteredMatches
-
-    return [...filteredMatches].sort((a, b) => {
-      if (sortConfig.key === "date") {
-        return sortConfig.direction === "asc"
-          ? new Date(a.date).getTime() - new Date(b.date).getTime()
-          : new Date(b.date).getTime() - new Date(a.date).getTime()
-      }
-
-      if (sortConfig.key === "round") {
-        // Extract numbers from round strings for proper sorting
-        const extractRoundNumber = (round: string | number | undefined): number => {
-          if (typeof round === 'number') return round
-          if (!round) return 0
-          const match = String(round).match(/\d+/)
-          return match ? parseInt(match[0], 10) : 0
-        }
-        
-        const roundA = extractRoundNumber(a.round)
-        const roundB = extractRoundNumber(b.round)
-        return sortConfig.direction === "asc" ? roundA - roundB : roundB - roundA
-      }
-
-      if (sortConfig.key === "goals") {
-        const goalsA = a.home_score + a.away_score
-        const goalsB = b.home_score + b.away_score
-        return sortConfig.direction === "asc" ? goalsA - goalsB : goalsB - goalsA
-      }
-
-      if (sortConfig.key === "home_team") {
-        return sortConfig.direction === "asc" 
-          ? a.home_team.localeCompare(b.home_team)
-          : b.home_team.localeCompare(a.home_team)
-      }
-
-      if (sortConfig.key === "away_team") {
-        return sortConfig.direction === "asc" 
-          ? a.away_team.localeCompare(b.away_team)
-          : b.away_team.localeCompare(a.away_team)
-      }
-
-      return 0
-    })
-  }, [filteredMatches, sortConfig])
-
-  const matchesByRound = useMemo(() => {
-    return sortedMatches.reduce(
-      (acc, match) => {
-        const round = String(match.round || "Unknown")
-        if (!acc[round]) {
-          acc[round] = []
-        }
-        acc[round].push(match)
-        return acc
-      },
-      {} as Record<string, Match[]>
-    )
-  }, [sortedMatches])
-
-  if (matches.length === 0) {
-    return <NoMatchesFound />
+// Fix the sorting icon issue by ensuring getSortIcon returns JSX elements
+export function MatchesTable({ matches, loading = false }: MatchesTableProps) {
+  const { sortConfig, requestSort, sortMatches, getSortIcon } = useMatchSorting();
+  const navigate = useNavigate();
+  
+  // Show loading state if there are no matches or loading prop is true
+  if (loading) {
+    return (
+      <div className="py-6 flex flex-col items-center justify-center text-gray-400">
+        <Loader className="w-8 h-8 animate-spin mb-2" />
+        <p>Loading matches...</p>
+      </div>
+    );
+  }
+  
+  // Show empty state if there are no matches
+  if (!matches || matches.length === 0) {
+    return (
+      <div className="py-6 flex flex-col items-center justify-center text-gray-400">
+        <p>No matches found.</p>
+        <p className="text-sm">Upload a CSV file to add matches.</p>
+      </div>
+    );
   }
 
+  // Sort the matches
+  const sortedMatches = sortMatches(matches);
+  
   return (
-    <Card className="bg-black/20 border-white/5">
-      <CardHeader className="pb-0">
-        <MatchesHeader
-          viewType={viewType}
-          setViewType={setViewType}
-          requestSort={requestSort}
-          getSortIcon={getSortIcon}
-        />
-      </CardHeader>
-
-      <CardContent className="pt-6">
-        <MatchFilters onFilterChange={setFilters} />
-
-        {viewType === "cards" && <CardsView matches={sortedMatches} />}
-        {viewType === "rounds" && <RoundsView matchesByRound={matchesByRound} />}
-        {viewType === "all" && (
-          <TableView
-            matches={sortedMatches}
-            requestSort={requestSort}
-            getSortIcon={getSortIcon}
-          />
-        )}
-      </CardContent>
-    </Card>
-  )
-})
-
-MatchesTable.displayName = "MatchesTable"
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-white/5">
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+              <button
+                onClick={() => requestSort('date')}
+                className="flex items-center hover:text-gray-100"
+              >
+                Date
+                {getSortIcon('date')}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+              <button
+                onClick={() => requestSort('round')}
+                className="flex items-center hover:text-gray-100"
+              >
+                Round
+                {getSortIcon('round')}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+              <button
+                onClick={() => requestSort('home_team')}
+                className="flex items-center hover:text-gray-100"
+              >
+                Home Team
+                {getSortIcon('home_team')}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-center text-sm font-medium text-gray-300">
+              <button
+                onClick={() => requestSort('goals')}
+                className="flex items-center justify-center hover:text-gray-100"
+              >
+                Score
+                {getSortIcon('goals')}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+              <button
+                onClick={() => requestSort('away_team')}
+                className="flex items-center hover:text-gray-100"
+              >
+                Away Team
+                {getSortIcon('away_team')}
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedMatches.map((match, index) => (
+            <tr
+              key={`${match.home_team}-${match.away_team}-${match.date}-${index}`}
+              className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
+              onClick={() => {
+                // Handle match click - could navigate to a match detail page
+              }}
+            >
+              <td className="px-4 py-3 text-sm">{match.date}</td>
+              <td className="px-4 py-3 text-sm">{match.round}</td>
+              <td className="px-4 py-3 text-sm">{match.home_team}</td>
+              <td className="px-4 py-3 text-center">
+                <div className="flex items-center justify-center">
+                  <span className="text-sm font-semibold">{match.home_score}</span>
+                  <span className="mx-2 text-gray-400">-</span>
+                  <span className="text-sm font-semibold">{match.away_score}</span>
+                </div>
+              </td>
+              <td className="px-4 py-3 text-sm">{match.away_team}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

@@ -4,6 +4,9 @@ import { Match } from "@/types"
 import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
 import React from "react"
 
+// Define the allowed sort fields
+export type SortField = 'date' | 'round' | 'goals' | 'home_team' | 'away_team';
+
 export interface SortConfig {
   key: string
   direction: "asc" | "desc"
@@ -62,6 +65,7 @@ export function useMatchSorting(initialSortConfig?: SortConfig | null) {
     })
   }, [sortConfig])
 
+  // Modified to return JSX elements instead of strings
   const getSortIcon = useCallback((key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
       return <ArrowUpDown className="h-4 w-4 ml-1" />
