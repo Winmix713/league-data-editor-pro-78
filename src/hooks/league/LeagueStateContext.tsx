@@ -1,117 +1,88 @@
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { LeagueData } from '@/types';
 
-import { createContext, useContext, useState } from "react"
-import { useNavigation } from "./useNavigation"
-import { useLeagueData } from "./useLeagueData" 
-import type { LeagueState } from "./types"
-import type { LeagueData } from "@/types"
-import { toast } from "sonner"
-
-// Create context
-const LeagueStateContext = createContext<LeagueState | undefined>(undefined)
-
-// Hook to use the context
-export const useLeagueState = () => {
-  const context = useContext(LeagueStateContext)
-  if (context === undefined) {
-    throw new Error("useLeagueState must be used within a LeagueStateProvider")
-  }
-  return context
+interface LeagueStateContextType {
+  leagues: LeagueData[];
+  selectedLeague: LeagueData | null;
+  loadingStates: {
+    data: boolean;
+    save: boolean;
+    refresh: boolean;
+  };
+  errorState: {
+    message: string | null;
+    code: string | null;
+  };
+  setLoadingState: (key: keyof LoadingStates, value: boolean) => void;
+  setErrorState: (message: string | null, code: string | null) => void;
+  // Other methods...
 }
 
-interface LeagueStateProviderProps {
-  children: React.ReactNode
+interface LoadingStates {
+  data: boolean;
+  save: boolean;
+  refresh: boolean;
 }
 
-// Provider component
-export const LeagueStateProvider = ({ children }: LeagueStateProviderProps) => {
-  // Get navigation state and actions
-  const {
-    currentRoute,
-    selectedLeagueId,
-    selectedMatchId,
-    selectedTab,
-    navigate,
-    goBack,
-    resetNavigation,
-    setSelectedLeagueId,
-    setSelectedTab
-  } = useNavigation()
-  
-  // Track loading state
-  const [isLoading, setIsLoading] = useState(false)
-  
-  // Get data state and actions
-  const {
-    leaguesList,
-    currentMatches,
-    searchTerm,
-    isNewLeagueModalOpen,
-    handleLeagueAction: handleLeagueActionBase,
-    handleCreateLeague,
-    handleUpdateLeague,
-    handleUpdateMatches,
-    setSearchTerm,
-    setIsNewLeagueModalOpen
-  } = useLeagueData(setSelectedLeagueId)
+const LeagueStateContext = createContext<LeagueStateContextType | undefined>(undefined);
 
-  // Refresh data with loading indicator
-  const refreshData = () => {
-    setIsLoading(true)
-    // Simulate data refresh - in a real implementation, this would call
-    // an API endpoint or database query
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success("Data refreshed successfully")
-    }, 1000)
-  }
+export const LeagueStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [leagues, setLeagues] = useState<LeagueData[]>([]);
+  const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(null);
+  const [loadingStates, setLoadingStates] = useState<LoadingStates>({
+    data: false,
+    save: false,
+    refresh: false
+  });
+  const [errorState, setErrorState] = useState<{ message: string | null; code: string | null }>({
+    message: null, 
+    code: null
+  });
 
-  // Enhanced league action handler that also handles navigation
-  const handleLeagueAction = (leagueId: string, action: "view" | "edit" | "complete" | "delete") => {
-    handleLeagueActionBase(leagueId, action)
-    
-    // Handle navigation for view/edit actions
-    if (action === "view" || action === "edit") {
-      navigate("league-details", { leagueId, tab: "matches" })
+  const setLoadingState = (key: keyof LoadingStates, value: boolean) => {
+    setLoadingStates(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateErrorState = (message: string | null, code: string | null) => {
+    setErrorState({ message, code });
+  };
+
+  // Implement other methods like fetchLeagues, updateLeague, etc.
+  const fetchLeagues = async () => {
+    try {
+      setLoadingState('data', true);
+      updateErrorState(null, null);
+      
+      // Fetch logic here
+      
+      setLoadingState('data', false);
+    } catch (error) {
+      setLoadingState('data', false);
+      updateErrorState(error instanceof Error ? error.message : 'Unknown error', 'FETCH_ERROR');
     }
-    
-    // Show toast notification for completed actions
-    if (action === "complete") {
-      toast.success("League marked as completed")
-    } else if (action === "delete") {
-      toast.success("League deleted successfully")
-    }
-  }
+  };
+
+  const value = {
+    leagues,
+    selectedLeague,
+    loadingStates,
+    errorState,
+    setLoadingState,
+    setErrorState: updateErrorState,
+    // Other methods...
+  };
 
   return (
-    <LeagueStateContext.Provider value={{
-      // Navigation state
-      currentRoute,
-      selectedLeagueId,
-      selectedMatchId,
-      selectedTab,
-      
-      // Data state
-      leaguesList,
-      currentMatches,
-      searchTerm,
-      isNewLeagueModalOpen,
-      isLoading,
-      
-      // Navigation actions
-      navigate,
-      goBack,
-      resetNavigation,
-      
-      // Data actions
-      handleLeagueAction,
-      handleCreateLeague,
-      handleUpdateLeague,
-      handleUpdateMatches,
-      setSearchTerm,
-      setIsNewLeagueModalOpen,
-      refreshData,
-    }}>
+    <LeagueStateContext.Provider value={value}>
       {children}
     </LeagueStateContext.Provider>
-  )
-}
+  );
+};
+
+export const useLeagueState = (): LeagueStateContextType => {
+  const context = useContext(LeagueStateContext);
+  if (context === undefined) {
+    throw new Error('useLeagueState must be used within a LeagueStateProvider');
+  }
+  return context;
+};
