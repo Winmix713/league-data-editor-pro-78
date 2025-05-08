@@ -1,17 +1,26 @@
+
 import { useNavigate } from "react-router-dom"
+import { useMemo } from "react"
 import { Match } from "@/types"
-import { useMatchSorting } from "@/components/matches/useMatchSorting"
+import { useMatchSorting, SortField } from "@/components/matches/useMatchSorting"
 import { Loader } from "@/components/ui/loader"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface MatchesTableProps {
   matches: Match[]
   loading?: boolean
+  onMatchClick?: (match: Match) => void
 }
 
-// Fix the sorting icon issue by ensuring getSortIcon returns JSX elements
-export function MatchesTable({ matches, loading = false }: MatchesTableProps) {
+// Memoized component for better performance
+export function MatchesTable({ matches, loading = false, onMatchClick }: MatchesTableProps) {
   const { sortConfig, requestSort, sortMatches, getSortIcon } = useMatchSorting();
   const navigate = useNavigate();
+  
+  // Memoize sorted matches to prevent unnecessary re-sorting
+  const sortedMatches = useMemo(() => {
+    return sortMatches(matches);
+  }, [matches, sortMatches]);
   
   // Show loading state if there are no matches or loading prop is true
   if (loading) {
@@ -32,86 +41,91 @@ export function MatchesTable({ matches, loading = false }: MatchesTableProps) {
       </div>
     );
   }
-
-  // Sort the matches
-  const sortedMatches = sortMatches(matches);
+  
+  const handleMatchClick = (match: Match) => {
+    if (onMatchClick) {
+      onMatchClick(match);
+    }
+  };
   
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-white/5">
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+      <Table>
+        <TableHeader className="bg-black/20">
+          <TableRow className="border-b border-white/5 hover:bg-transparent">
+            <TableHead className="text-gray-400 font-normal">
               <button
-                onClick={() => requestSort('date')}
+                onClick={() => requestSort('date' as SortField)}
                 className="flex items-center hover:text-gray-100"
               >
                 Date
-                {getSortIcon('date')}
+                {getSortIcon('date' as SortField)}
               </button>
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+            </TableHead>
+            <TableHead className="text-gray-400 font-normal">
               <button
-                onClick={() => requestSort('round')}
+                onClick={() => requestSort('round' as SortField)}
                 className="flex items-center hover:text-gray-100"
               >
                 Round
-                {getSortIcon('round')}
+                {getSortIcon('round' as SortField)}
               </button>
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+            </TableHead>
+            <TableHead className="text-gray-400 font-normal">
               <button
-                onClick={() => requestSort('home_team')}
+                onClick={() => requestSort('home_team' as SortField)}
                 className="flex items-center hover:text-gray-100"
               >
                 Home Team
-                {getSortIcon('home_team')}
+                {getSortIcon('home_team' as SortField)}
               </button>
-            </th>
-            <th className="px-4 py-3 text-center text-sm font-medium text-gray-300">
+            </TableHead>
+            <TableHead className="text-gray-400 font-normal text-center">
               <button
-                onClick={() => requestSort('goals')}
+                onClick={() => requestSort('goals' as SortField)}
                 className="flex items-center justify-center hover:text-gray-100"
               >
                 Score
-                {getSortIcon('goals')}
+                {getSortIcon('goals' as SortField)}
               </button>
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+            </TableHead>
+            <TableHead className="text-gray-400 font-normal">
               <button
-                onClick={() => requestSort('away_team')}
+                onClick={() => requestSort('away_team' as SortField)}
                 className="flex items-center hover:text-gray-100"
               >
                 Away Team
-                {getSortIcon('away_team')}
+                {getSortIcon('away_team' as SortField)}
               </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {sortedMatches.map((match, index) => (
-            <tr
+            <TableRow
               key={`${match.home_team}-${match.away_team}-${match.date}-${index}`}
               className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
-              onClick={() => {
-                // Handle match click - could navigate to a match detail page
-              }}
+              onClick={() => handleMatchClick(match)}
             >
-              <td className="px-4 py-3 text-sm">{match.date}</td>
-              <td className="px-4 py-3 text-sm">{match.round}</td>
-              <td className="px-4 py-3 text-sm">{match.home_team}</td>
-              <td className="px-4 py-3 text-center">
+              <TableCell>{match.date}</TableCell>
+              <TableCell>{match.round || "-"}</TableCell>
+              <TableCell className={match.home_score > match.away_score ? "font-medium text-emerald-400" : ""}>
+                {match.home_team}
+              </TableCell>
+              <TableCell className="text-center">
                 <div className="flex items-center justify-center">
                   <span className="text-sm font-semibold">{match.home_score}</span>
                   <span className="mx-2 text-gray-400">-</span>
                   <span className="text-sm font-semibold">{match.away_score}</span>
                 </div>
-              </td>
-              <td className="px-4 py-3 text-sm">{match.away_team}</td>
-            </tr>
+              </TableCell>
+              <TableCell className={match.away_score > match.home_score ? "font-medium text-emerald-400" : ""}>
+                {match.away_team}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
